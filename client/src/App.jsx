@@ -12,6 +12,7 @@ import Sidebar from "./pages/Sidebar.jsx";
 import CourseTable from "./pages/admin/course/CourseTable.jsx";
 import AddCourse from "./pages/admin/course/AddCourse.jsx";
 import EditCourse from "./pages/admin/course/EditCourse.jsx";
+import CreateLecture from "./pages/admin/lecture/CreateLecture.jsx";
 
 // Centralized application route configuration
 const appRouter = createBrowserRouter([
@@ -61,6 +62,10 @@ const appRouter = createBrowserRouter([
           {
             path: "course/:courseId",
             element: <EditCourse />,
+          },
+          {
+            path: "course/:courseId/lecture",
+            element: <CreateLecture />,
           },
         ],
       },
