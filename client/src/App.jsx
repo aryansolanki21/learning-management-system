@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainLayout from "./layout/MainLayout.jsx";
 
-import Login from "./pages/Login";
+import Login from "./pages/Login.jsx";
 import HeroSection from "./pages/student/HeroSection.jsx";
 import MyLearning from "./pages/student/MyLearning.jsx";
 import Courses from "./pages/student/Courses.jsx";
@@ -13,6 +13,7 @@ import CourseTable from "./pages/admin/course/CourseTable.jsx";
 import AddCourse from "./pages/admin/course/AddCourse.jsx";
 import EditCourse from "./pages/admin/course/EditCourse.jsx";
 import CreateLecture from "./pages/admin/lecture/CreateLecture.jsx";
+import EditLecture from "./pages/admin/lecture/EditLecture.jsx";
 
 // Centralized application route configuration
 const appRouter = createBrowserRouter([
@@ -66,6 +67,10 @@ const appRouter = createBrowserRouter([
           {
             path: "course/:courseId/lecture",
             element: <CreateLecture />,
+          },
+          {
+            path: "course/:courseId/lecture/:lectureId",
+            element: <EditLecture />,
           },
         ],
       },

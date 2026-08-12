@@ -7,9 +7,10 @@ import connectDB from "./config/db.js";
 
 import userRoute from "./routes/userRoutes.js";
 import courseRoute from "./routes/courseRoutes.js";
+import mediaRoute from "./routes/mediaRoutes.js";
 
 // Load environment variables from .env
-dotenv.config({});
+dotenv.config();
 
 // Establish database connection
 connectDB();
@@ -32,6 +33,7 @@ app.use(
 // Register application routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/course", courseRoute);
+app.use("/api/v1/media", mediaRoute);
 
 app.listen(PORT, () => {
   console.log(`Server listen at port ${PORT}`);
