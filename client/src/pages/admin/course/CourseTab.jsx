@@ -28,6 +28,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   useEditCourseMutation,
   useGetCourseByIdQuery,
+  usePublishCourseMutation,
 } from "@/features/api/courseApi.js";
 
 const categories = [
@@ -56,14 +57,19 @@ const CourseTab = () => {
     courseThumbnail: "",
   });
 
-  const [previewThumbnail, setPreviewThumnail] = useState("");
+  const [previewThumbnail, setPreviewThumbnail] = useState("");
 
   const navigate = useNavigate();
   const params = useParams();
   const courseId = params.courseId;
 
-  const { data: courseByIdData, isLoading: courseByIdLoading } =
-    useGetCourseByIdQuery(courseId, { refetchOnMountOrArgChange: true });
+  const {
+    data: courseByIdData,
+    isLoading: courseByIdLoading,
+    refetch,
+  } = useGetCourseByIdQuery(courseId, { refetchOnMountOrArgChange: true });
+
+  const [publishCourse] = usePublishCourseMutation();
 
   useEffect(() => {
     if (courseByIdData?.course) {
@@ -93,7 +99,7 @@ const CourseTab = () => {
     setInput({ ...input, category: value });
   };
 
-  const selectCourseLavel = (value) => {
+  const selectCourseLevel = (value) => {
     setInput({ ...input, courseLevel: value });
   };
 
@@ -102,7 +108,7 @@ const CourseTab = () => {
     if (file) {
       setInput({ ...input, courseThumbnail: file });
       const fileReader = new FileReader();
-      fileReader.onloadend = () => setPreviewThumnail(fileReader.result);
+      fileReader.onloadend = () => setPreviewThumbnail(fileReader.result);
       fileReader.readAsDataURL(file);
     }
   };
@@ -137,7 +143,27 @@ const CourseTab = () => {
 
   if (courseByIdLoading) return <h1>Loading...</h1>;
 
-  const isPublished = false;
+  const publishStatusHandler = async (action) => {
+    try {
+      const response = await publishCourse({
+        courseId,
+        query: action,
+      }).unwrap();
+
+      refetch();
+
+      toast.add({
+        title: "Success",
+        description: response.message,
+      });
+    } catch (error) {
+      toast.add({
+        title: "Error",
+        description:
+          error?.data?.message || "Failed to publish or unpublish course.",
+      });
+    }
+  };
 
   return (
     <Card>
@@ -149,8 +175,16 @@ const CourseTab = () => {
           </CardDescription>
         </div>
         <div className="space-x-2">
-          <Button variant="outline">
-            {isPublished ? "Unpublished" : "Publish"}
+          <Button
+            variant="outline"
+            disabled={courseByIdData?.course.lectures.length === 0}
+            onClick={() =>
+              publishStatusHandler(
+                courseByIdData?.course.isPublished ? "false" : "true",
+              )
+            }
+          >
+            {courseByIdData?.course.isPublished ? "Unpublish" : "Publish"}
           </Button>
           <Button>Remove Course</Button>
         </div>
@@ -205,7 +239,7 @@ const CourseTab = () => {
               <Label>Course Level</Label>
               <Select
                 value={input.courseLevel}
-                onValueChange={selectCourseLavel}
+                onValueChange={selectCourseLevel}
               >
                 <SelectTrigger className="w-full md:w-64">
                   <SelectValue placeholder="Select a course level" />

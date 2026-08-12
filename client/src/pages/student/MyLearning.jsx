@@ -3,7 +3,7 @@ import Course from "./Course.jsx";
 
 const MyLearning = () => {
   const isLoading = false;
-  const myLearningCourses = [1, 2, 3];
+  const myLearningCourses = [];
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 md:px-0">
@@ -18,8 +18,8 @@ const MyLearning = () => {
           <p>You are not enrolled in any course.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {myLearningCourses.map((_, index) => (
-              <Course key={index} />
+            {myLearningCourses.map((course, index) => (
+              <Course key={index} course={course} />
             ))}
           </div>
         )}

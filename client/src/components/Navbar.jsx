@@ -115,7 +115,9 @@ const Navbar = () => {
                 {user?.role === "instructor" && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem><Link to="/admin/dashboard">Dashboard</Link></DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link to="/admin/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -133,7 +135,9 @@ const Navbar = () => {
 
       {/* Mobile navigation */}
       <div className="flex md:hidden items-center justify-between h-full px-4">
-        <h1 className="font-extrabold text-2xl">E-Learning</h1>
+        <Link to="/">
+          <h1 className="font-extrabold text-2xl">E-Learning</h1>
+        </Link>
         <MobileNavbar />
       </div>
     </div>

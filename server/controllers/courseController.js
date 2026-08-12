@@ -1,6 +1,10 @@
 import { Course } from "../models/Course.js";
 import { Lecture } from "../models/Lecture.js";
-import { deleteMediaFromCloudinary, deleteVideoFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
+import {
+  deleteMediaFromCloudinary,
+  deleteVideoFromCloudinary,
+  uploadMedia,
+} from "../utils/cloudinary.js";
 
 export const createCourse = async (req, res) => {
   try {
@@ -28,6 +32,31 @@ export const createCourse = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to create course.",
+    });
+  }
+};
+
+export const getPublishedCourse = async (_, res) => {
+  try {
+    const courses = await Course.find({ isPublished: true }).populate({
+      path: "creator",
+      select: "name photoUrl",
+    });
+    if (!courses) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found!",
+      });
+    }
+
+    return res.status(200).json({
+      courses,
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Failed to get published courses",
     });
   }
 };
@@ -290,6 +319,34 @@ export const getLectureById = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "Failed to get lecture by id",
+    });
+  }
+};
+
+export const togglePublishCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { publish } = req.query;
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found!",
+      });
+    }
+
+    course.isPublished = publish === "true";
+    await course.save();
+
+    const statusMessage = course.isPublished ? "Published" : "Unpublished";
+    return res.status(200).json({
+      message: `Course is ${statusMessage}`,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to update course publish status",
     });
   }
 };
