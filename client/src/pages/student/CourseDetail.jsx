@@ -9,74 +9,149 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator.jsx";
+
+import { useGetCourseDetailWithStatusQuery } from "@/features/api/purchaseApi.js";
+
+import ReactPlayer from "react-player";
 import { BadgeInfo, Lock, PlayCircle } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CourseDetail = () => {
-  const purchasedCourse = false;
+  const params = useParams();
+  const courseId = params.courseId;
+  const navigate = useNavigate();
+
+  const { data, isLoading, isError } =
+    useGetCourseDetailWithStatusQuery(courseId);
+
+  if (isLoading) return <h1>Loading...</h1>;
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center min-h-100">
+        <p className="text-red-500">Failed to load course details.</p>
+      </div>
+    );
+  }
+
+  const { course, purchased } = data;
+
+  const handleContinueCourse = () => {
+    if (purchased) {
+      navigate(`/course-progress/${courseId}`);
+    }
+  };
 
   return (
     <div className="space-y-5">
       <div className="bg-[#2D2F31] text-white">
         <div className="max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2">
-          <h1 className="font-bold text-2xl md:text-3xl">complete React js</h1>
-          <p className="text-base md:text-lg">Course Sub-title</p>
+          <h1 className="font-bold text-2xl md:text-3xl">
+            {course?.courseTitle}
+          </h1>
+          <p className="text-base md:text-lg">{course?.subTitle}</p>
           <p>
             Created By{" "}
             <span className="text-[#C0C4FC] underline italic">
-              Aryan solanki
+              {course?.creator?.name}
             </span>
           </p>
           <div className="flex items-center gap-2 text-sm">
             <BadgeInfo size={16} />
-            <p>Last updated 13-08-2026</p>
+            <p>Last updated {course?.updatedAt?.split("T")[0]}</p>
           </div>
-          <p>Students enrolled: 10</p>
+          <p>Students enrolled: {course?.enrolledStudents?.length || 0}</p>
         </div>
       </div>
+
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto my-5 px-4 md:px-8 flex flex-col lg:flex-row justify-between gap-10">
+        {/* Left Section */}
         <div className="w-full lg:w-1/2 space-y-5">
           <h1 className="font-bold text-xl md:text-2xl">Description</h1>
-          <p className="text-sm">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Possimus
-            quibusdam facere ea ipsa, numquam nihil vitae veritatis similique
-            illo mollitia eos, asperiores consequuntur error voluptatem itaque
-            unde quam? Accusantium fugit tenetur soluta at autem quaerat porro
-          </p>
-
+          <p
+            className="text-sm"
+            dangerouslySetInnerHTML={{ __html: course?.description || "" }}
+          />
           <Card>
             <CardHeader>
               <CardTitle>Course Content</CardTitle>
-              <CardDescription>4 lectures</CardDescription>
+              <CardDescription>
+                {course?.lectures?.length || 0} lectures
+              </CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-3">
-              {[1, 2, 3].map((_, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-sm">
-                  <span>
-                    {purchasedCourse ? (
-                      <PlayCircle size={14} />
-                    ) : (
-                      <Lock size={14} />
-                    )}
-                  </span>
-                  <p>Lecture Title</p>
-                </div>
-              ))}
+              {course?.lectures?.length > 0 ? (
+                course.lectures.map((lecture, idx) => (
+                  <div
+                    key={lecture._id}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <span>
+                      {purchased || idx === 0 ? (
+                        <PlayCircle size={14} />
+                      ) : (
+                        <Lock size={14} />
+                      )}
+                    </span>
+                    <p>{lecture.lectureTitle}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No lectures available yet.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
+
+        {/* Right Section */}
         <div className="w-full lg:w-1/3">
           <Card>
             <CardContent className="p-4 flex flex-col">
-              <div className="w-full aspect-video mb-4">React player Video</div>
-              <h1>Lecture title</h1>
+              {/* Video */}
+              <div className="w-full aspect-video mb-4">
+                {course?.lectures?.length > 0 &&
+                course.lectures[0]?.videoUrl ? (
+                  <ReactPlayer
+                    width="100%"
+                    height="100%"
+                    src={course.lectures[0].videoUrl}
+                    controls={true}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-muted">
+                    <p className="text-muted-foreground">
+                      No preview available
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Lecture Title */}
+              <h1 className="font-semibold">
+                {course?.lectures?.length > 0
+                  ? course.lectures[0].lectureTitle
+                  : "No lecture available"}
+              </h1>
               <Separator className="my-2" />
-              <h1 className="text-lg md:text-xl font-semibold">Course Price</h1>
+
+              {/* Price */}
+              <h1 className="text-lg md:text-xl font-semibold">
+                Course Price: ₹{course?.coursePrice}
+              </h1>
             </CardContent>
+
+            {/* Button */}
             <CardFooter className="flex justify-center p-4">
-              {purchasedCourse ? (
-                <Button className="w-full">Continue Course</Button>
+              {purchased ? (
+                <Button onClick={handleContinueCourse} className="w-full">
+                  Continue Course
+                </Button>
               ) : (
-                <BuyCourseButton />
+                <BuyCourseButton courseId={courseId} />
               )}
             </CardFooter>
           </Card>

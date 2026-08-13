@@ -43,6 +43,7 @@ const appRouter = createBrowserRouter([
         path: "/course-detail/:courseId",
         element: <CourseDetail />,
       },
+
       {
         path: "/profile",
         element: <Profile />,

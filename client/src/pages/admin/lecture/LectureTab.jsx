@@ -42,7 +42,15 @@ const LectureTab = () => {
     if (lecture) {
       setLectureTitle(lecture.lectureTitle ?? "");
       setIsFree(lecture.isPreviewFree ?? false);
-      setUploadVideoInfo(lecture.videoInfo ?? null);
+
+      setUploadVideoInfo(
+        lecture.videoUrl
+          ? {
+              videoUrl: lecture.videoUrl,
+              publicId: lecture.publicId,
+            }
+          : null,
+      );
     }
   }, [lecture]);
 
@@ -54,45 +62,62 @@ const LectureTab = () => {
     { data: removeData, isLoading: removeLoading, isSuccess: removeSuccess },
   ] = useRemoveLectureMutation();
 
-  const fileChangeHandler = async (event) => {
-    const file = event.target.files[0];
+ const fileChangeHandler = async (event) => {
+  const file = event.target.files[0];
 
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      setMediaProgress(true);
+  if (!file) return;
 
-      try {
-        const res = await axios.post(`${MEDIA_API}/upload-video`, formData, {
-          onUploadProgress: ({ loaded, total }) => {
-            setUploadProgress(Math.round((loaded * 100) / total));
-          },
-        });
+  const formData = new FormData();
+  formData.append("file", file);
 
-        if (res.data.success) {
-          setUploadVideoInfo({
-            videoUrl: res.data.data.url,
-            publicId: res.data.data.public_id,
-          });
+  setMediaProgress(true);
+  setUploadProgress(0);
 
-          toast.add({
-            title: "Success",
-            description: res?.data?.message,
-          });
-        }
-      } catch (error) {
-        console.error(error);
-        toast.add({
-          title: "Error",
-          description: error?.data?.message || "Failed to update lecture.",
-        });
-      } finally {
-        setMediaProgress(false);
+  try {
+    const res = await axios.post(
+      `${MEDIA_API}/upload-video`,
+      formData,
+      {
+        withCredentials: true,
+        onUploadProgress: ({ loaded, total }) => {
+          setUploadProgress(Math.round((loaded * 100) / total));
+        },
       }
+    );
+
+    if (res.data.success) {
+      setUploadVideoInfo({
+        videoUrl: res.data.data.url,
+        publicId: res.data.data.public_id,
+      });
+
+      toast.add({
+        title: "Success",
+        description: res.data.message || "Video uploaded successfully.",
+      });
     }
-  };
+  } catch (error) {
+    console.error(error);
+
+    toast.add({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Failed to upload video.",
+    });
+  } finally {
+    setMediaProgress(false);
+  }
+};
 
   const editLectureHandler = async () => {
+    if (!uploadVideoInfo?.videoUrl) {
+      toast.add({
+        title: "Error",
+        description: "Please upload a video before updating the lecture.",
+      });
+      return;
+    }
+
     await editLecture({
       lectureTitle,
       videoInfo: uploadVideoInfo,
