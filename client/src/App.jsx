@@ -15,6 +15,7 @@ import EditCourse from "./pages/admin/course/EditCourse.jsx";
 import CreateLecture from "./pages/admin/lecture/CreateLecture.jsx";
 import EditLecture from "./pages/admin/lecture/EditLecture.jsx";
 import CourseDetail from "./pages/student/CourseDetail.jsx";
+import CourseProgress from "./pages/student/CourseProgress.jsx";
 
 // Centralized application route configuration
 const appRouter = createBrowserRouter([
@@ -43,7 +44,10 @@ const appRouter = createBrowserRouter([
         path: "/course-detail/:courseId",
         element: <CourseDetail />,
       },
-
+      {
+        path: "/course-progress/:courseId",
+        element: <CourseProgress />,
+      },
       {
         path: "/profile",
         element: <Profile />,
