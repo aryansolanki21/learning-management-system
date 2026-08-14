@@ -198,13 +198,22 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
 
 export const getAllPurchasedCourses = async (req, res) => {
   try {
-    const userId = req.id;
+    const instructorId = req.id;
 
+    // Find courses created by the logged-in instructor
+    const courses = await Course.find({
+      creator: instructorId,
+    }).select("_id");
+
+    const courseIds = courses.map((course) => course._id);
+
+    // Find completed purchases for those courses
     const purchasedCourse = await CoursePurchase.find({
-      userId,
+      courseId: { $in: courseIds },
       status: "completed",
     }).populate("courseId");
 
+    console.log("Purchased courses:", purchasedCourse);
     return res.status(200).json({
       success: true,
       purchasedCourse,
