@@ -16,6 +16,7 @@ import CreateLecture from "./pages/admin/lecture/CreateLecture.jsx";
 import EditLecture from "./pages/admin/lecture/EditLecture.jsx";
 import CourseDetail from "./pages/student/CourseDetail.jsx";
 import CourseProgress from "./pages/student/CourseProgress.jsx";
+import SearchPage from "./pages/student/SearchPage.jsx";
 
 // Centralized application route configuration
 const appRouter = createBrowserRouter([
@@ -41,6 +42,14 @@ const appRouter = createBrowserRouter([
         element: <MyLearning />,
       },
       {
+        path: "/profile",
+        element: <Profile />,
+      },
+      {
+        path: "/course/search",
+        element: <SearchPage />,
+      },
+      {
         path: "/course-detail/:courseId",
         element: <CourseDetail />,
       },
@@ -48,11 +57,7 @@ const appRouter = createBrowserRouter([
         path: "/course-progress/:courseId",
         element: <CourseProgress />,
       },
-      {
-        path: "/profile",
-        element: <Profile />,
-      },
-
+      
       // Admin Routes
       {
         path: "admin",

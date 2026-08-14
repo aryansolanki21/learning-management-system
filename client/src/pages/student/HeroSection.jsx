@@ -1,7 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input.jsx";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const searchHandler = (event) => {
+    event.preventDefault();
+
+    if (searchQuery.trim() !== "") {
+      navigate(`/course/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    setSearchQuery("");
+  };
+
   return (
     <div className="relative bg-linear-to-r from-blue-500 to-indigo-600 py-24 px-4 text-center">
       <div className="max-w-3xl mx-auto">
@@ -12,9 +27,14 @@ const HeroSection = () => {
           Discover, Learn, and Upskill with our wide range of courses
         </p>
 
-        <form className="flex items-center bg-white rounded-full shadow-lg overflow-hidden max-w-xl mx-auto mb-6">
+        <form
+          onSubmit={searchHandler}
+          className="flex items-center bg-white rounded-full shadow-lg overflow-hidden max-w-xl mx-auto mb-6"
+        >
           <Input
             type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search courses..."
             className="flex-1 h-12 px-6 border-none rounded-l-full focus-visible:ring-0"
           />
@@ -26,7 +46,10 @@ const HeroSection = () => {
             Search
           </Button>
         </form>
-        <Button className="bg-white border-0 text-blue-600 rounded-full hover:bg-gray-200">
+        <Button
+          onClick={() => navigate("/course/search")}
+          className="bg-white border-0 text-blue-600 rounded-full hover:bg-gray-200"
+        >
           Explore Courses
         </Button>
       </div>
