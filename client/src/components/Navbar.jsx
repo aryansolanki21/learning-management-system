@@ -138,7 +138,7 @@ const Navbar = () => {
         <Link to="/">
           <h1 className="font-extrabold text-2xl">E-Learning</h1>
         </Link>
-        <MobileNavbar />
+        <MobileNavbar user={user} logoutHandler={logoutHandler} />
       </div>
     </div>
   );
@@ -146,8 +146,8 @@ const Navbar = () => {
 
 export default Navbar;
 
-const MobileNavbar = () => {
-  const role = "instructor";
+const MobileNavbar = ({ user, logoutHandler }) => {
+  const navigate = useNavigate();
 
   return (
     <Sheet>
@@ -164,27 +164,45 @@ const MobileNavbar = () => {
       />
       <SheetContent className="flex flex-col">
         <SheetHeader className="mt-2">
-          <SheetTitle>E-Learning</SheetTitle>
+          <SheetTitle>
+            <Link to="/">E-Learning</Link>
+          </SheetTitle>
         </SheetHeader>
 
-        <div className="grid gap-4 px-4 my-4">
-          <span>My Learning</span>
-          <span>Edit Profile</span>
-          <p className="cursor-pointer">Log out</p>
+        {user ? (
+          <div className="grid gap-4 px-4 my-4">
+            <Link to="/my-learning">My Learning</Link>
+            <Link to="/profile">Edit Profile</Link>
+            <p className="cursor-pointer" onClick={logoutHandler}>
+              Log out
+            </p>
 
-          {/* Instructor-only navigation */}
-          {role === "instructor" && (
-            <div className="mt-2">
-              <SheetClose
-                render={
-                  <Button type="submit" className="w-full">
-                    Dashboard
-                  </Button>
-                }
-              />
-            </div>
-          )}
-        </div>
+            {/* only Instructor can see dashboard  */}
+            {user?.role === "instructor" && (
+              <div className="mt-2">
+                <SheetClose
+                  render={
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      onClick={() => navigate("/admin/dashboard")}
+                    >
+                      Dashboard
+                    </Button>
+                  }
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 px-4 my-4">
+            <Button variant="outline" onClick={() => navigate("/login")}>
+              Login
+            </Button>
+
+            <Button onClick={() => navigate("/login")}>Signup</Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

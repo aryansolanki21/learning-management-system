@@ -24,8 +24,6 @@ const Dashboard = () => {
   if (isError)
     return <h1 className="text-red-500">Failed to get purchased course</h1>;
 
-  console.log(data);
-
   const { purchasedCourse } = data || [];
 
   const courseData = purchasedCourse.map((course) => ({
