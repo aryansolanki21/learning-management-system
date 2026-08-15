@@ -17,6 +17,12 @@ import EditLecture from "./pages/admin/lecture/EditLecture.jsx";
 import CourseDetail from "./pages/student/CourseDetail.jsx";
 import CourseProgress from "./pages/student/CourseProgress.jsx";
 import SearchPage from "./pages/student/SearchPage.jsx";
+import {
+  AdminRoute,
+  AuthenticatedUser,
+  ProtectedRoute,
+} from "./components/ProtectedRoutes.jsx";
+import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute.jsx";
 
 // Centralized application route configuration
 const appRouter = createBrowserRouter([
@@ -35,15 +41,27 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "/login",
-        element: <Login />,
+        element: (
+          <AuthenticatedUser>
+            <Login />
+          </AuthenticatedUser>
+        ),
       },
       {
         path: "/my-learning",
-        element: <MyLearning />,
+        element: (
+          <ProtectedRoute>
+            <MyLearning />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/profile",
-        element: <Profile />,
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/course/search",
@@ -55,13 +73,23 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "/course-progress/:courseId",
-        element: <CourseProgress />,
+        element: (
+          <ProtectedRoute>
+            <PurchaseCourseProtectedRoute>
+              <CourseProgress />
+            </PurchaseCourseProtectedRoute>
+          </ProtectedRoute>
+        ),
       },
-      
+
       // Admin Routes
       {
         path: "admin",
-        element: <Sidebar />,
+        element: (
+          <AdminRoute>
+            <Sidebar />
+          </AdminRoute>
+        ),
         children: [
           {
             path: "dashboard",
