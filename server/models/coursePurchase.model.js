@@ -17,6 +17,7 @@ const coursePurchaseSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     status: {
@@ -24,6 +25,7 @@ const coursePurchaseSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
+    
     orderId: {
       type: String,
       required: true,

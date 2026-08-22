@@ -1,12 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-
-dotenv.config({});
 
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export const uploadMedia = async (file) => {
@@ -22,16 +19,20 @@ export const uploadMedia = async (file) => {
 
 export const deleteMediaFromCloudinary = async (publicId) => {
   try {
-    await cloudinary.uploader.destroy(publicId);
+    return await cloudinary.uploader.destroy(publicId);
   } catch (error) {
-    console.error("Failed to delete image:", error);
+    console.error("Cloudinary media deletion failed:", error);
+    throw error;
   }
 };
 
 export const deleteVideoFromCloudinary = async (publicId) => {
   try {
-    await cloudinary.uploader.destroy(publicId, { resource_type: "video" });
+    return await cloudinary.uploader.destroy(publicId, {
+      resource_type: "video",
+    });
   } catch (error) {
-    console.error("Failed to delete video:", error);
+    console.error("Cloudinary video deletion failed:", error);
+    throw error;
   }
 };

@@ -70,6 +70,8 @@ temp/
 *.tmp
 *.temp
 
+uploads/
+
 # Runtime Files
 pids/
 *.pid

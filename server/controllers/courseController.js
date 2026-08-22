@@ -1,5 +1,5 @@
-import { Course } from "../models/Course.js";
-import { Lecture } from "../models/Lecture.js";
+import { Course } from "../models/course.model.js";
+import { Lecture } from "../models/lecture.model.js";
 import {
   deleteMediaFromCloudinary,
   deleteVideoFromCloudinary,
@@ -40,9 +40,7 @@ export const searchCourse = async (req, res) => {
   try {
     const { query = "", categories = "", sortByPrice = "" } = req.query;
 
-    const categoryList = categories
-  ? categories.split(",")
-  : [];
+    const categoryList = categories ? categories.split(",") : [];
 
     // create search query
     const searchCriteria = {

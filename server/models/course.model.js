@@ -2,48 +2,62 @@ import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema(
   {
-    courseTitle: {
+    title: {
       type: String,
       required: true,
+      trim: true,
     },
-    subTitle: {
+
+    subtitle: {
       type: String,
+      trim: true,
     },
+
     description: {
       type: String,
     },
+
     category: {
       type: String,
       required: true,
-    },
-    courseLevel: {
-      type: String,
-      enum: ["Beginner", "Medium", "Advance"],
-    },
-    coursePrice: {
-      type: Number,
+      trim: true,
     },
 
-    courseThumbnail: {
+    level: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+    },
+
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    thumbnail: {
       type: String,
     },
+
     enrolledStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
     ],
+
     lectures: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Lecture",
       },
     ],
+
     creator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
     isPublished: {
       type: Boolean,
       default: false,
