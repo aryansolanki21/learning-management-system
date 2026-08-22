@@ -1,5 +1,6 @@
+import "dotenv/config";
+
 import express from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -10,9 +11,6 @@ import courseRoute from "./routes/courseRoutes.js";
 import mediaRoute from "./routes/mediaRoutes.js";
 import purchaseRoute from "./routes/purchaseRoute.js";
 import courseProgressRoute from "./routes/courseProgressRoutes.js";
-
-// Load environment variables from .env
-dotenv.config();
 
 // Establish database connection
 connectDB();

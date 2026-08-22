@@ -2,9 +2,9 @@ import jwt from "jsonwebtoken";
 
 // Authenticate requests using the JWT stored in an HTTP-only cookie.
 const authenticateUser = (req, res, next) => {
-  const token = req.cookies.accessToken;
+  const accessToken = req.cookies.accessToken;
 
-  if (!token) {
+  if (!accessToken) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized: Please login to access this resource.",
@@ -12,7 +12,7 @@ const authenticateUser = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
 
     if (!decoded.userId) {
       return res.status(401).json({

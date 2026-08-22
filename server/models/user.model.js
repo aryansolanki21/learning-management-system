@@ -33,10 +33,20 @@ const userSchema = new mongoose.Schema(
         ref: "Course",
       },
     ],
-    
+
     photoUrl: {
       type: String,
       default: "",
+    },
+
+    refreshTokenHash: {
+      type: String,
+      default: null,
+    },
+
+    refreshTokenExpiresAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },

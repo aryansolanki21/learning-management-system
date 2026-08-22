@@ -1,13 +1,13 @@
 import express from "express";
 import upload from "../utils/multer.js";
 import { uploadMedia } from "../utils/cloudinary.js";
-import isAuthenticated from "../middlewares/isAuthenticated.js";
+import authenticateUser from "../middlewares/authenticate-user.js";
 
 const router = express.Router();
 
 router
   .route("/upload-video")
-  .post(isAuthenticated, upload.single("file"), async (req, res) => {
+  .post(authenticateUser, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({

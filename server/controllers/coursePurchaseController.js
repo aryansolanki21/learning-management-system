@@ -213,7 +213,6 @@ export const getAllPurchasedCourses = async (req, res) => {
       status: "completed",
     }).populate("courseId");
 
-    console.log("Purchased courses:", purchasedCourse);
     return res.status(200).json({
       success: true,
       purchasedCourse,

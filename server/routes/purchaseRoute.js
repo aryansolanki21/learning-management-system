@@ -1,6 +1,6 @@
 import express from "express";
 
-import isAuthenticated from "../middlewares/isAuthenticated.js";
+import authenticateUser from "../middlewares/authenticate-user.js";
 
 import {
   createCheckoutOrder,
@@ -13,14 +13,14 @@ const router = express.Router();
 
 router
   .route("/checkout/create-order")
-  .post(isAuthenticated, createCheckoutOrder);
+  .post(authenticateUser, createCheckoutOrder);
 
-router.route("/checkout/verify").post(isAuthenticated, verifyPayment);
+router.route("/checkout/verify").post(authenticateUser, verifyPayment);
 
 router
   .route("/course/:courseId/detail-with-status")
-  .get(isAuthenticated, getCourseDetailWithPurchaseStatus);
+  .get(authenticateUser, getCourseDetailWithPurchaseStatus);
 
-router.route("/").get(isAuthenticated, getAllPurchasedCourses);
+router.route("/").get(authenticateUser, getAllPurchasedCourses);
 
 export default router;
