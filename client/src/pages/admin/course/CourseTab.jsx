@@ -48,13 +48,13 @@ const courseLevel = ["Beginner", "Medium", "Advance"];
 
 const CourseTab = () => {
   const [input, setInput] = useState({
-    courseTitle: "",
-    subTitle: "",
+    title: "",
+    subtitle: "",
     description: "",
     category: "",
-    courseLevel: "",
-    coursePrice: "",
-    courseThumbnail: "",
+    level: "",
+    price: "",
+    thumbnail: "",
   });
 
   const [previewThumbnail, setPreviewThumbnail] = useState("");
@@ -76,13 +76,13 @@ const CourseTab = () => {
       const course = courseByIdData.course;
 
       setInput({
-        courseTitle: course.courseTitle ?? "",
-        subTitle: course.subTitle ?? "",
+        title: course.title ?? "",
+        subtitle: course.subtitle ?? "",
         description: course.description ?? "",
         category: course.category ?? "",
-        courseLevel: course.courseLevel ?? "",
-        coursePrice: course.coursePrice ?? "",
-        courseThumbnail: "",
+        level: course.level ?? "",
+        price: course.price ?? "",
+        thumbnail: "",
       });
     }
   }, [courseByIdData?.course]);
@@ -100,13 +100,13 @@ const CourseTab = () => {
   };
 
   const selectCourseLevel = (value) => {
-    setInput({ ...input, courseLevel: value });
+    setInput({ ...input, level: value });
   };
 
   const selectThumbnail = (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      setInput({ ...input, courseThumbnail: file });
+      setInput({ ...input, thumbnail: file });
       const fileReader = new FileReader();
       fileReader.onloadend = () => setPreviewThumbnail(fileReader.result);
       fileReader.readAsDataURL(file);
@@ -115,13 +115,13 @@ const CourseTab = () => {
 
   const updateCourseHandler = async () => {
     const formData = new FormData();
-    formData.append("courseTitle", input.courseTitle);
-    formData.append("subTitle", input.subTitle);
+    formData.append("title", input.title);
+    formData.append("subtitle", input.subtitle);
     formData.append("description", input.description);
     formData.append("category", input.category);
-    formData.append("courseLevel", input.courseLevel);
-    formData.append("coursePrice", input.coursePrice);
-    formData.append("courseThumbnail", input.courseThumbnail);
+    formData.append("level", input.level);
+    formData.append("price", input.price);
+    formData.append("courseThumbnail", input.thumbnail);
 
     await editCourse({ formData, courseId });
   };

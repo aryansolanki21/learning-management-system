@@ -6,29 +6,32 @@ import {
   uploadMedia,
 } from "../utils/cloudinary.js";
 
+// ==========  Course functions  =========================
 export const createCourse = async (req, res) => {
   try {
-    const { courseTitle, category } = req.body;
-    if (!courseTitle || !category) {
+    const { title, category } = req.body;
+
+    if (!title?.trim() || !category?.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Course title and category is required",
+        message: "Course title and category are required.",
       });
     }
 
     const course = await Course.create({
-      courseTitle,
-      category,
-      creator: req.id,
+      title: title.trim(),
+      category: category.trim(),
+      creator: req.userId,
     });
 
     return res.status(201).json({
-      course,
       success: true,
-      message: "Course created.",
+      message: "Course created successfully.",
+      course,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Course creation error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to create course.",
@@ -36,59 +39,39 @@ export const createCourse = async (req, res) => {
   }
 };
 
-export const searchCourse = async (req, res) => {
+export const getPublishedCourses = async (_, res) => {
   try {
-    const { query = "", categories = "", sortByPrice = "" } = req.query;
-
-    const categoryList = categories ? categories.split(",") : [];
-
-    // create search query
-    const searchCriteria = {
+    const courses = await Course.find({
       isPublished: true,
-      $or: [
-        { courseTitle: { $regex: query, $options: "i" } },
-        { subTitle: { $regex: query, $options: "i" } },
-        { category: { $regex: query, $options: "i" } },
-      ],
-    };
-
-    // if categories selected
-    if (categoryList.length > 0) {
-      searchCriteria.category = { $in: categoryList };
-    }
-
-    // define sorting order
-    const sortOptions = {};
-    if (sortByPrice === "low") {
-      sortOptions.coursePrice = 1; // sort price in ascending
-    } else if (sortByPrice === "high") {
-      sortOptions.coursePrice = -1; // descending order
-    }
-
-    let courses = await Course.find(searchCriteria)
-      .populate({ path: "creator", select: "name photoUrl" })
-      .sort(sortOptions);
+    }).populate({
+      path: "creator",
+      select: "name photoUrl",
+    });
 
     return res.status(200).json({
       success: true,
-      courses: courses || [],
+      courses,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Failed to fetch published courses:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Failed to serach course.",
+      message: "Failed to fetch published courses.",
     });
   }
 };
 
-export const getPublishedCourse = async (_, res) => {
+export const getCourseById = async (req, res) => {
   try {
-    const courses = await Course.find({ isPublished: true }).populate({
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId).populate({
       path: "creator",
       select: "name photoUrl",
     });
-    if (!courses) {
+
+    if (!course) {
       return res.status(404).json({
         success: false,
         message: "Course not found!",
@@ -96,28 +79,125 @@ export const getPublishedCourse = async (_, res) => {
     }
 
     return res.status(200).json({
-      courses,
       success: true,
+      message: "Course retrieved successfully.",
+      course,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Failed to fetch course:", error);
+
     return res.status(500).json({
-      message: "Failed to get published courses",
+      success: false,
+      message: "Failed to fetch course.",
+    });
+  }
+};
+
+export const searchCourses = async (req, res) => {
+  try {
+    const {
+      query = "",
+      categories = "",
+      sortByPrice = "",
+      page = "1",
+      limit = "10",
+    } = req.query;
+
+    const currentPage = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const pageSize = Math.min(
+      Math.max(Number.parseInt(limit, 10) || 10, 1),
+      50,
+    );
+
+    const skip = (currentPage - 1) * pageSize;
+
+    const categoryList = categories
+      .split(",")
+      .map((category) => category.trim())
+      .filter(Boolean);
+
+    const searchCriteria = {
+      isPublished: true,
+    };
+
+    if (query.trim()) {
+      searchCriteria.$or = [
+        { title: { $regex: query.trim(), $options: "i" } },
+        { subtitle: { $regex: query.trim(), $options: "i" } },
+        { category: { $regex: query.trim(), $options: "i" } },
+      ];
+    }
+
+    if (categoryList.length > 0) {
+      searchCriteria.category = {
+        $in: categoryList,
+      };
+    }
+
+    const sortOptions = {
+      createdAt: -1,
+    };
+
+    if (sortByPrice === "low") {
+      sortOptions.price = 1;
+      sortOptions._id = 1;
+    } else if (sortByPrice === "high") {
+      sortOptions.price = -1;
+      sortOptions._id = 1;
+    }
+
+    const [courses, totalCourses] = await Promise.all([
+      Course.find(searchCriteria)
+        .populate({
+          path: "creator",
+          select: "name photoUrl",
+        })
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(pageSize),
+
+      Course.countDocuments(searchQuery),
+    ]);
+
+    const totalPages = Math.ceil(totalCourses / pageSize);
+
+    return res.status(200).json({
+      success: true,
+      courses,
+      pagination: {
+        currentPage,
+        pageSize,
+        totalCourses,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
+    });
+  } catch (error) {
+    console.error("Course search error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to search courses.",
     });
   }
 };
 
 export const getCreatorCourses = async (req, res) => {
   try {
-    const userId = req.id;
-    const courses = await Course.find({ creator: userId });
+    const courses = await Course.find({ creator: req.userId })
+      .select(
+        "title subtitle category level price thumbnail isPublished createdAt",
+      )
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
       courses,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Failed to fetch creator courses:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch courses.",
@@ -127,244 +207,114 @@ export const getCreatorCourses = async (req, res) => {
 
 export const editCourse = async (req, res) => {
   try {
-    const courseId = req.params.courseId;
-    const {
-      courseTitle,
-      subTitle,
-      description,
-      category,
-      courseLevel,
-      coursePrice,
-    } = req.body;
+    const { courseId } = req.params;
+
+    const { title, subtitle, description, category, level, price } = req.body;
+
     const thumbnail = req.file;
 
-    let course = await Course.findById(courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: "Course not found!",
+        message: "Course not found.",
       });
     }
 
-    let courseThumbnail;
-    if (thumbnail) {
-      if (course.courseThumbnail) {
-        const publicId = course.courseThumbnail.split("/").pop().split(".")[0];
-        await deleteMediaFromCloudinary(publicId); // delete an old image
+    // Ensure only the course creator can edit the course.
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to edit this course.",
+      });
+    }
+
+    const updateData = {};
+
+    if (title?.trim()) {
+      updateData.title = title.trim();
+    }
+
+    if (subtitle !== undefined) {
+      updateData.subtitle = subtitle.trim();
+    }
+
+    if (description !== undefined) {
+      updateData.description = description.trim();
+    }
+
+    if (category?.trim()) {
+      updateData.category = category.trim();
+    }
+
+    if (level !== undefined) {
+      updateData.level = level;
+    }
+
+    if (price !== undefined) {
+      const parsedPrice = Number(price);
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Price must be a valid non-negative number.",
+        });
       }
-      // upload a thumbnail on cloudinary
-      courseThumbnail = await uploadMedia(thumbnail.path);
+
+      updateData.price = parsedPrice;
     }
 
-    const updateData = {
-      courseTitle,
-      subTitle,
-      description,
-      category,
-      courseLevel,
-      coursePrice,
-      courseThumbnail: courseThumbnail?.secure_url,
-    };
+    let oldThumbnailPublicId = null;
 
-    course = await Course.findByIdAndUpdate(courseId, updateData, {
-      returnDocument: "after",
-    });
+    if (thumbnail) {
+      const cloudResponse = await uploadMedia(thumbnail.path);
 
-    return res.status(200).json({
-      course,
-      success: true,
-      message: "Course updated successfully.",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create course.",
-    });
-  }
-};
+      if (!cloudResponse?.secure_url) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload course thumbnail.",
+        });
+      }
 
-export const getCourseById = async (req, res) => {
-  try {
-    const { courseId } = req.params;
+      updateData.thumbnail = cloudResponse.secure_url;
 
-    const course = await Course.findById(courseId);
-
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found!",
-      });
+      if (course.thumbnail) {
+        oldThumbnailPublicId = course.thumbnail.split("/").pop().split(".")[0];
+      }
     }
 
-    return res.status(200).json({
-      course,
-      success: true,
-      message: "Course found.",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to get courses by id.",
-    });
-  }
-};
-
-export const createLecture = async (req, res) => {
-  try {
-    const { lectureTitle } = req.body;
-    const { courseId } = req.params;
-
-    if (!lectureTitle || !courseId) {
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
-        message: "Lecture title is required",
+        success: false,
+        message: "No course data provided for update.",
       });
     }
 
-    // create lecture
-    const lecture = await Lecture.create({ lectureTitle });
-
-    const course = await Course.findById(courseId);
-
-    if (course) {
-      course.lectures.push(lecture._id);
-      await course.save();
-    }
-
-    return res.status(201).json({
-      lecture,
-      message: "Lecture created successfully.",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create lecture",
-    });
-  }
-};
-
-export const getCourseLecture = async (req, res) => {
-  try {
-    const { courseId } = req.params;
-
-    const course = await Course.findById(courseId).populate("lectures");
-
-    if (!course) {
-      return res.status(404).json({
-        message: "Course not found",
-      });
-    }
-
-    return res.status(200).json({
-      lectures: course.lectures,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: "Failed to get lectures",
-    });
-  }
-};
-
-export const editLecture = async (req, res) => {
-  try {
-    const { lectureTitle, videoInfo, isPreviewFree } = req.body;
-
-    const { courseId, lectureId } = req.params;
-
-    const lecture = await Lecture.findById(lectureId);
-    if (!lecture) {
-      return res.status(404).json({
-        message: "Lecture not found!",
-      });
-    }
-
-    // update lecture
-    if (lectureTitle) lecture.lectureTitle = lectureTitle;
-    if (videoInfo?.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
-    if (videoInfo?.publicId) lecture.publicId = videoInfo.publicId;
-
-    if (typeof isPreviewFree === "boolean") {
-      lecture.isPreviewFree = isPreviewFree;
-    }
-
-    await lecture.save();
-
-    // Ensure the course still contains the lecture ID
-    const course = await Course.findById(courseId);
-
-    if (course && !course.lectures.includes(lecture._id)) {
-      course.lectures.push(lecture._id);
-      await course.save();
-    }
-
-    return res.status(200).json({
-      lecture,
-      message: "Lecture updated successfully.",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: "Failed to edit lectures",
-    });
-  }
-};
-
-export const removeLecture = async (req, res) => {
-  try {
-    const { lectureId } = req.params;
-
-    const lecture = await Lecture.findByIdAndDelete(lectureId);
-
-    if (!lecture) {
-      return res.status(404).json({
-        message: "Lecture not found!",
-      });
-    }
-
-    // Delete the lecture video from Cloudinary
-    if (lecture.publicId) {
-      await deleteVideoFromCloudinary(lecture.publicId);
-    }
-
-    // Remove the lecture reference from the associated course
-    await Course.updateOne(
-      { lectures: lectureId }, // find the course that contains the lecture
-      { $pull: { lectures: lectureId } }, // Remove the lectures id from the lectures array
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      },
     );
 
-    return res.status(200).json({
-      message: "Lecture removed successfully.",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: "Failed to remove lecture",
-    });
-  }
-};
-
-export const getLectureById = async (req, res) => {
-  try {
-    const { lectureId } = req.params;
-    const lecture = await Lecture.findById(lectureId);
-
-    if (!lecture) {
-      return res.status(404).json({
-        message: "Lecture not found!",
-      });
+    if (oldThumbnailPublicId) {
+      await deleteMediaFromCloudinary(oldThumbnailPublicId);
     }
 
     return res.status(200).json({
-      lecture,
+      success: true,
+      message: "Course updated successfully.",
+      course: updatedCourse,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Course update error:", error);
+
     return res.status(500).json({
-      message: "Failed to get lecture by id",
+      success: false,
+      message: "Failed to update course.",
     });
   }
 };
@@ -374,25 +324,277 @@ export const togglePublishCourse = async (req, res) => {
     const { courseId } = req.params;
     const { publish } = req.query;
 
-    const course = await Course.findById(courseId);
+    if (publish !== "true" && publish !== "false") {
+      return res.status(400).json({
+        success: false,
+        message: "Publish value must be either true or false.",
+      });
+    }
+
+    const course = await Course.findById(courseId).select(
+      "creator isPublished",
+    );
 
     if (!course) {
       return res.status(404).json({
+        success: false,
         message: "Course not found!",
       });
     }
 
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course.",
+      });
+    }
+
     course.isPublished = publish === "true";
+
     await course.save();
 
-    const statusMessage = course.isPublished ? "Published" : "Unpublished";
     return res.status(200).json({
-      message: `Course is ${statusMessage}`,
+      success: true,
+      message: course.isPublished
+        ? "Course published successfully."
+        : "Course unpublished successfully.",
+      course,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Course publish status update error:", error);
+
     return res.status(500).json({
-      message: "Failed to update course publish status",
+      success: false,
+      message: "Failed to update course publish status.",
+    });
+  }
+};
+
+// ==========  Lecture functions  =========================
+export const createLecture = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { title } = req.body;
+
+    if (!courseId || !title?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID and lecture title are required.",
+      });
+    }
+
+    const course = await Course.findById(courseId).select("creator lectures");
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course.",
+      });
+    }
+
+    const lecture = await Lecture.create({
+      course: courseId,
+      title: title.trim(),
+    });
+
+    course.lectures.push(lecture._id);
+    await course.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Lecture created successfully.",
+      lecture,
+    });
+  } catch (error) {
+    console.error("Lecture creation error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create lecture.",
+    });
+  }
+};
+
+export const getCourseLectures = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const courseExists = await Course.exists({ _id: courseId });
+
+    if (!courseExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
+    const lectures = await Lecture.find({ course: courseId }).sort({
+      createdAt: 1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      lectures,
+    });
+  } catch (error) {
+    console.error("Failed to fetch course lectures:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch lectures.",
+    });
+  }
+};
+
+export const getLectureById = async (req, res) => {
+  try {
+    const { lectureId } = req.params;
+
+    const lecture = await Lecture.findById(lectureId);
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      lecture,
+    });
+  } catch (error) {
+    console.error("Failed to fetch lecture:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch lecture.",
+    });
+  }
+};
+
+export const editLecture = async (req, res) => {
+  try {
+    const { courseId, lectureId } = req.params;
+
+    const { title, videoInfo, isPreviewFree } = req.body;
+
+    const course = await Course.findById(courseId).select("creator lectures");
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course.",
+      });
+    }
+
+    const lecture = await Lecture.findOne({
+      _id: lectureId,
+      course: courseId,
+    });
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found in this course.",
+      });
+    }
+
+    if (title?.trim()) {
+      lecture.title = title.trim();
+    }
+
+    if (videoInfo?.videoUrl !== undefined) {
+      lecture.videoUrl = videoInfo.videoUrl;
+    }
+
+    if (videoInfo?.publicId !== undefined) {
+      lecture.publicId = videoInfo.publicId;
+    }
+
+    if (typeof isPreviewFree === "boolean") {
+      lecture.isPreviewFree = isPreviewFree;
+    }
+
+    await lecture.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Lecture updated successfully.",
+      lecture,
+    });
+  } catch (error) {
+    console.error("Lecture update error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update lecture.",
+    });
+  }
+};
+
+export const removeLecture = async (req, res) => {
+  try {
+    const { lectureId, courseId } = req.params;
+
+    const course = await Course.findById(courseId).select("creator lectures");
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course.",
+      });
+    }
+
+    const lecture = await Lecture.findOne({ _id: lectureId, course: courseId });
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found in this course.",
+      });
+    }
+
+    await lecture.deleteOne();
+
+    course.lectures.pull(lectureId);
+    await course.save();
+
+    // Delete the lecture video from Cloudinary
+    if (lecture.publicId) {
+      await deleteVideoFromCloudinary(lecture.publicId);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lecture removed successfully.",
+    });
+  } catch (error) {
+    console.error("Lecture deletion error:", error);
+
+    return res.status(500).json({
+      message: "Failed to remove lecture",
     });
   }
 };

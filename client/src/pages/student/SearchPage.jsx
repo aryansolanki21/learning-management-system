@@ -1,4 +1,4 @@
-import { useGetSearchCourseQuery } from "@/features/api/courseApi.js";
+import { useSearchCoursesQuery } from "@/features/api/courseApi.js";
 import Filter from "./Filter.jsx";
 import SearchResult from "./SearchResult.jsx";
 import CourseSkeleton from "@/components/CourseSkeleton.jsx";
@@ -14,7 +14,7 @@ const SearchPage = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [sortByPrice, setSortByPrice] = useState("");
 
-  const { data, isLoading } = useGetSearchCourseQuery({
+  const { data, isLoading } = useSearchCoursesQuery({
     searchQuery: query || "",
     categories: selectedCategories,
     sortByPrice,

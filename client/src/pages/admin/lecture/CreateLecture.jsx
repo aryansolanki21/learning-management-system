@@ -5,7 +5,7 @@ import { toast } from "@/components/ui/toast.jsx";
 import Lecture from "./Lecture";
 import {
   useCreateLectureMutation,
-  useGetCourseLectureQuery,
+  useGetCourseLecturesQuery,
 } from "@/features/api/courseApi.js";
 
 import { Loader2 } from "lucide-react";
@@ -27,7 +27,7 @@ const CreateLecture = () => {
     isLoading: lectureLoading,
     isError: lectureError,
     refetch,
-  } = useGetCourseLectureQuery(courseId);
+  } = useGetCourseLecturesQuery(courseId);
 
   const createLectureHandler = async () => {
     await createLecture({ lectureTitle, courseId });

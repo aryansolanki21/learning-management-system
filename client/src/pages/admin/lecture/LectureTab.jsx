@@ -26,7 +26,7 @@ import { useParams } from "react-router-dom";
 const MEDIA_API = "http://localhost:8080/api/v1/media";
 
 const LectureTab = () => {
-  const [lectureTitle, setLectureTitle] = useState("");
+  const [title, setTitle] = useState("");
   const [uploadVideoInfo, setUploadVideoInfo] = useState(null);
   const [isFree, setIsFree] = useState(false);
   const [mediaProgress, setMediaProgress] = useState(false);
@@ -40,7 +40,7 @@ const LectureTab = () => {
 
   useEffect(() => {
     if (lecture) {
-      setLectureTitle(lecture.lectureTitle ?? "");
+      setTitle(lecture.title ?? "");
       setIsFree(lecture.isPreviewFree ?? false);
 
       setUploadVideoInfo(
@@ -62,52 +62,48 @@ const LectureTab = () => {
     { data: removeData, isLoading: removeLoading, isSuccess: removeSuccess },
   ] = useRemoveLectureMutation();
 
- const fileChangeHandler = async (event) => {
-  const file = event.target.files[0];
+  const fileChangeHandler = async (event) => {
+    const file = event.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-  setMediaProgress(true);
-  setUploadProgress(0);
+    setMediaProgress(true);
+    setUploadProgress(0);
 
-  try {
-    const res = await axios.post(
-      `${MEDIA_API}/upload-video`,
-      formData,
-      {
+    try {
+      const res = await axios.post(`${MEDIA_API}/upload-video`, formData, {
         withCredentials: true,
         onUploadProgress: ({ loaded, total }) => {
           setUploadProgress(Math.round((loaded * 100) / total));
         },
-      }
-    );
-
-    if (res.data.success) {
-      setUploadVideoInfo({
-        videoUrl: res.data.data.url,
-        publicId: res.data.data.public_id,
       });
+
+      if (res.data.success) {
+        setUploadVideoInfo({
+          videoUrl: res.data.data.url,
+          publicId: res.data.data.public_id,
+        });
+
+        toast.add({
+          title: "Success",
+          description: res.data.message || "Video uploaded successfully.",
+        });
+      }
+    } catch (error) {
+      console.error(error);
 
       toast.add({
-        title: "Success",
-        description: res.data.message || "Video uploaded successfully.",
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to upload video.",
       });
+    } finally {
+      setMediaProgress(false);
     }
-  } catch (error) {
-    console.error(error);
-
-    toast.add({
-      title: "Error",
-      description:
-        error?.response?.data?.message || "Failed to upload video.",
-    });
-  } finally {
-    setMediaProgress(false);
-  }
-};
+  };
 
   const editLectureHandler = async () => {
     if (!uploadVideoInfo?.videoUrl) {
@@ -119,7 +115,7 @@ const LectureTab = () => {
     }
 
     await editLecture({
-      lectureTitle,
+      title,
       videoInfo: uploadVideoInfo,
       isPreviewFree: isFree,
       courseId,
@@ -128,7 +124,7 @@ const LectureTab = () => {
   };
 
   const removeLectureHandler = async () => {
-    await removeLecture(lectureId);
+    await removeLecture(courseId, lectureId);
   };
 
   useEffect(() => {
@@ -187,8 +183,8 @@ const LectureTab = () => {
           <Label>Title</Label>
           <Input
             type="text"
-            value={lectureTitle}
-            onChange={(event) => setLectureTitle(event.target.value)}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Ex. Introduction to Javascript"
           />
         </div>

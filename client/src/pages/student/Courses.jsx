@@ -1,9 +1,9 @@
 import Course from "./Course.jsx";
 import CourseSkeleton from "@/components/CourseSkeleton.jsx";
-import { useGetPublishedCourseQuery } from "@/features/api/courseApi.js";
+import { useGetPublishedCoursesQuery } from "@/features/api/courseApi.js";
 
 const Courses = () => {
-  const { data, isLoading, isError } = useGetPublishedCourseQuery();
+  const { data, isLoading, isError } = useGetPublishedCoursesQuery();
 
   if (isError) return <h1>Some error occurred while fetching courses.</h1>;
 
@@ -16,8 +16,7 @@ const Courses = () => {
             ? Array.from({ length: 8 }).map((_, index) => (
                 <CourseSkeleton key={index} />
               ))
-            : 
-              data?.courses?.map((course) => (
+            : data?.courses?.map((course) => (
                 <Course key={course._id} course={course} />
               ))}
         </div>

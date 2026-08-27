@@ -7,34 +7,43 @@ import {
   editCourse,
   editLecture,
   getCourseById,
-  getCourseLecture,
+  getCourseLectures,
   getCreatorCourses,
   getLectureById,
-  getPublishedCourse,
+  getPublishedCourses,
   removeLecture,
-  searchCourse,
+  searchCourses,
   togglePublishCourse,
 } from "../controllers/courseController.js";
 import upload from "../utils/multer.js";
 
 const router = express.Router();
 
-router.route("/").post(authenticateUser, createCourse);
-router.route("/search").get(searchCourse);
+router
+  .route("/")
+  .post(authenticateUser, createCourse)
+  .get(authenticateUser, getCreatorCourses);
+router.route("/search").get(searchCourses);
 
-router.route("/published-courses").get(getPublishedCourse);
-router.route("/").get(authenticateUser, getCreatorCourses);
+router.route("/published-courses").get(getPublishedCourses);
+
 router
   .route("/:courseId")
-  .put(authenticateUser, upload.single("courseThumbnail"), editCourse);
-router.route("/:courseId").get(getCourseById);
-router.route("/:courseId/lecture").post(authenticateUser, createLecture);
-router.route("/:courseId/lecture").get(authenticateUser, getCourseLecture);
+  .get(getCourseById)
+  .patch(authenticateUser, upload.single("courseThumbnail"), editCourse);
+
+router.route("/:courseId/publish").patch(authenticateUser, togglePublishCourse);
+
+router
+  .route("/:courseId/lecture")
+  .post(authenticateUser, createLecture)
+  .get(authenticateUser, getCourseLectures);
+
 router
   .route("/:courseId/lecture/:lectureId")
-  .post(authenticateUser, editLecture);
-router.route("/lecture/:lectureId").delete(authenticateUser, removeLecture);
+  .patch(authenticateUser, editLecture)
+  .delete(authenticateUser, removeLecture);
+
 router.route("/lecture/:lectureId").get(authenticateUser, getLectureById);
-router.route("/:courseId").patch(authenticateUser, togglePublishCourse);
 
 export default router;
