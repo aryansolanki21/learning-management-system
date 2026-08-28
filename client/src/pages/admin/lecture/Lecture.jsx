@@ -11,7 +11,7 @@ const Lecture = ({ lecture, courseId, index }) => {
   return (
     <div className="flex items-center justify-between bg-[#F7F9FA] px-4 py-2 rounded-md my-2">
       <h1 className="font-bold text-gray-800">
-        Lecture - {index + 1}: {lecture.lectureTitle}
+        Lecture - {index + 1}: {lecture.title}
       </h1>
       <Edit
         onClick={goToUpdateLecture}

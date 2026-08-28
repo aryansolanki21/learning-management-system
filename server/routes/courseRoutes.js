@@ -30,7 +30,7 @@ router.route("/published-courses").get(getPublishedCourses);
 router
   .route("/:courseId")
   .get(getCourseById)
-  .patch(authenticateUser, upload.single("courseThumbnail"), editCourse);
+  .patch(authenticateUser, upload.single("thumbnail"), editCourse);
 
 router.route("/:courseId/publish").patch(authenticateUser, togglePublishCourse);
 

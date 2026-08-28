@@ -44,7 +44,7 @@ const categories = [
   { label: "HTML", value: "HTML" },
 ];
 
-const courseLevel = ["Beginner", "Medium", "Advance"];
+const level = ["Beginner", "Intermediate", "Advanced"];
 
 const CourseTab = () => {
   const [input, setInput] = useState({
@@ -99,15 +99,18 @@ const CourseTab = () => {
     setInput({ ...input, category: value });
   };
 
-  const selectCourseLevel = (value) => {
+  const selectLevel = (value) => {
     setInput({ ...input, level: value });
   };
 
   const selectThumbnail = (event) => {
     const file = event.target.files?.[0];
+
     if (file) {
       setInput({ ...input, thumbnail: file });
+
       const fileReader = new FileReader();
+
       fileReader.onloadend = () => setPreviewThumbnail(fileReader.result);
       fileReader.readAsDataURL(file);
     }
@@ -121,7 +124,7 @@ const CourseTab = () => {
     formData.append("category", input.category);
     formData.append("level", input.level);
     formData.append("price", input.price);
-    formData.append("courseThumbnail", input.thumbnail);
+    formData.append("thumbnail", input.thumbnail);
 
     await editCourse({ formData, courseId });
   };
@@ -195,8 +198,8 @@ const CourseTab = () => {
             <Label>Title</Label>
             <Input
               type="text"
-              name="courseTitle"
-              value={input.courseTitle}
+              name="title"
+              value={input.title}
               onChange={changeEventHandler}
               placeholder="Ex. Fullstack developer"
             />
@@ -237,17 +240,14 @@ const CourseTab = () => {
             </div>
             <div className="space-y-2">
               <Label>Course Level</Label>
-              <Select
-                value={input.courseLevel}
-                onValueChange={selectCourseLevel}
-              >
+              <Select value={input.level} onValueChange={selectLevel}>
                 <SelectTrigger className="w-full md:w-64">
                   <SelectValue placeholder="Select a course level" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Course Level</SelectLabel>
-                    {courseLevel.map((level) => (
+                    {level.map((level) => (
                       <SelectItem key={level} value={level}>
                         {level}
                       </SelectItem>
@@ -260,8 +260,8 @@ const CourseTab = () => {
               <Label>Price in (INR)</Label>
               <Input
                 type="number"
-                name="coursePrice"
-                value={input.coursePrice}
+                name="price"
+                value={input.price}
                 onChange={changeEventHandler}
                 placeholder="199"
                 className="w-fit"
@@ -273,6 +273,7 @@ const CourseTab = () => {
             <Label>Course Thumbnail</Label>
             <Input
               type="file"
+              name="thumbnail"
               onChange={selectThumbnail}
               accept="image/*"
               className="w-fit"

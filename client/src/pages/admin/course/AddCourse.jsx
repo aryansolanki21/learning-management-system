@@ -34,7 +34,7 @@ const categories = [
 ];
 
 const AddCourse = () => {
-  const [courseTitle, setCourseTitle] = useState("");
+  const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [createCourse, { data, isLoading, isSuccess }] =
     useCreateCourseMutation();
@@ -48,7 +48,7 @@ const AddCourse = () => {
   // Create a new course using the provided title and category.
   const createCourseHandler = async () => {
     try {
-      await createCourse({ courseTitle, category }).unwrap();
+      await createCourse({ title, category }).unwrap();
     } catch (error) {
       console.error(error);
     }
@@ -83,9 +83,9 @@ const AddCourse = () => {
           <Label>Title</Label>
           <Input
             type="text"
-            name="courseTitle"
-            value={courseTitle}
-            onChange={(event) => setCourseTitle(event.target.value)}
+            name="title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Enter course title"
           />
         </div>

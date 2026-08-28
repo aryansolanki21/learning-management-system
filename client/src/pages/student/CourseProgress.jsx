@@ -5,7 +5,7 @@ import { toast } from "@/components/ui/toast.jsx";
 import {
   useCompleteCourseMutation,
   useGetCourseProgressQuery,
-  useInCompleteCourseMutation,
+  useIncompleteCourseMutation,
   useUpdateLectureProgressMutation,
 } from "@/features/api/courseProgressApi.js";
 
@@ -27,9 +27,9 @@ const CourseProgress = () => {
   ] = useCompleteCourseMutation();
 
   const [
-    inCompleteCourse,
+    incompleteCourse,
     { data: markInCompleteData, isSuccess: inCompletedSuccess },
-  ] = useInCompleteCourseMutation();
+  ] = useIncompleteCourseMutation();
 
   const [currentLecture, setCurrentLecture] = useState(null);
 
@@ -59,7 +59,7 @@ const CourseProgress = () => {
 
   const { courseDetails, progress, completed } = data.data;
 
-  const { courseTitle } = courseDetails;
+  const { title } = courseDetails;
 
   if (!courseDetails?.lectures?.length) {
     return <p>No lectures available for this course.</p>;
@@ -92,14 +92,14 @@ const CourseProgress = () => {
   };
 
   const handleInCompleteCourse = async () => {
-    await inCompleteCourse(courseId);
+    await incompleteCourse(courseId);
   };
 
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* Display course name  */}
       <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">{courseTitle}</h1>
+        <h1 className="text-2xl font-bold">{title}</h1>
         <Button
           onClick={completed ? handleInCompleteCourse : handleCompleteCourse}
           variant={completed ? "outline" : "default"}
@@ -137,7 +137,7 @@ const CourseProgress = () => {
                     lec._id === (currentLecture?._id || initialLecture._id),
                 ) + 1
               } : ${
-                currentLecture?.lectureTitle || initialLecture.lectureTitle
+                currentLecture?.title || initialLecture.title
               }`}
             </h3>
           </div>
@@ -163,7 +163,7 @@ const CourseProgress = () => {
                     )}
                     <div>
                       <CardTitle className="text-lg font-medium">
-                        {lecture.lectureTitle}
+                        {lecture.title}
                       </CardTitle>
                     </div>
                   </div>

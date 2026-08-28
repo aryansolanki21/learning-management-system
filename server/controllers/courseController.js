@@ -116,12 +116,14 @@ export const searchCourses = async (req, res) => {
       .map((category) => category.trim())
       .filter(Boolean);
 
-    const searchCriteria = {
+    const searchQuery  = {
       isPublished: true,
     };
 
     if (query.trim()) {
-      searchCriteria.$or = [
+       const searchTerm = query.trim();
+
+      searchQuery.$or = [
         { title: { $regex: query.trim(), $options: "i" } },
         { subtitle: { $regex: query.trim(), $options: "i" } },
         { category: { $regex: query.trim(), $options: "i" } },
@@ -129,7 +131,7 @@ export const searchCourses = async (req, res) => {
     }
 
     if (categoryList.length > 0) {
-      searchCriteria.category = {
+      searchQuery.category = {
         $in: categoryList,
       };
     }
@@ -147,7 +149,7 @@ export const searchCourses = async (req, res) => {
     }
 
     const [courses, totalCourses] = await Promise.all([
-      Course.find(searchCriteria)
+      Course.find(searchQuery )
         .populate({
           path: "creator",
           select: "name photoUrl",

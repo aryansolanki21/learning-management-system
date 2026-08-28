@@ -15,28 +15,28 @@ import {
   YAxis,
 } from "recharts";
 
-import { useGetAllPurchasedCourseQuery } from "@/features/api/purchaseApi.js";
+import { useGetAllPurchasedCoursesQuery } from "@/features/api/purchaseApi.js";
 
 const Dashboard = () => {
-  const { data, isError, isLoading } = useGetAllPurchasedCourseQuery();
+  const { data, isError, isLoading } = useGetAllPurchasedCoursesQuery();
 
   if (isLoading) return <h1>Loading...</h1>;
   if (isError)
     return <h1 className="text-red-500">Failed to get purchased course</h1>;
 
-  const { purchasedCourse } = data || [];
+  const { purchasedCourses } = data || [];
 
-  const courseData = purchasedCourse.map((course) => ({
+  const courseData = purchasedCourses.map((course) => ({
     name: course.courseId.courseTitle,
     price: course.courseId.coursePrice,
   }));
 
-  const totalRevenue = purchasedCourse.reduce(
+  const totalRevenue = purchasedCourses.reduce(
     (acc, element) => acc + (element.amount || 0),
     0,
   );
 
-  const totalSales = purchasedCourse.length;
+  const totalSales = purchasedCourses.length;
 
   return (
     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">

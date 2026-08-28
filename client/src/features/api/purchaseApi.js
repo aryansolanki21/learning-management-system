@@ -29,7 +29,7 @@ export const purchaseApi = createApi({
       invalidatesTags: ["Purchase"],
     }),
 
-    getCourseDetailWithStatus: builder.query({
+    getCourseDetailWithPurchaseStatus: builder.query({
       query: (courseId) => ({
         url: `/course/${courseId}/detail-with-status`,
         method: "GET",
@@ -37,7 +37,7 @@ export const purchaseApi = createApi({
       providesTags: ["Purchase"],
     }),
 
-    getAllPurchasedCourse: builder.query({
+    getAllPurchasedCourses: builder.query({
       query: () => ({
         url: `/`,
         method: "GET",
@@ -50,6 +50,6 @@ export const purchaseApi = createApi({
 export const {
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
-  useGetCourseDetailWithStatusQuery,
-  useGetAllPurchasedCourseQuery,
+  useGetCourseDetailWithPurchaseStatusQuery,
+  useGetAllPurchasedCoursesQuery,
 } = purchaseApi;

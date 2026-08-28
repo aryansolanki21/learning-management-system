@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator.jsx";
 
-import { useGetCourseDetailWithStatusQuery } from "@/features/api/purchaseApi.js";
+import { useGetCourseDetailWithPurchaseStatusQuery } from "@/features/api/purchaseApi.js";
 
 import ReactPlayer from "react-player";
 import { BadgeInfo, Lock, PlayCircle } from "lucide-react";
@@ -22,7 +22,7 @@ const CourseDetail = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, isError } =
-    useGetCourseDetailWithStatusQuery(courseId);
+    useGetCourseDetailWithPurchaseStatusQuery(courseId);
 
   if (isLoading) return <h1>Loading...</h1>;
 
@@ -34,10 +34,10 @@ const CourseDetail = () => {
     );
   }
 
-  const { course, purchased } = data;
+  const { course, isPurchased } = data || {};
 
   const handleContinueCourse = () => {
-    if (purchased) {
+    if (isPurchased) {
       navigate(`/course-progress/${courseId}`);
     }
   };
@@ -47,9 +47,9 @@ const CourseDetail = () => {
       <div className="bg-[#2D2F31] text-white">
         <div className="max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2">
           <h1 className="font-bold text-2xl md:text-3xl">
-            {course?.courseTitle}
+            {course?.title}
           </h1>
-          <p className="text-base md:text-lg">{course?.subTitle}</p>
+          <p className="text-base md:text-lg">{course?.title}</p>
           <p>
             Created By{" "}
             <span className="text-[#C0C4FC] underline italic">
@@ -89,13 +89,13 @@ const CourseDetail = () => {
                     className="flex items-center gap-3 text-sm"
                   >
                     <span>
-                      {purchased || idx === 0 ? (
+                      {isPurchased || idx === 0 ? (
                         <PlayCircle size={14} />
                       ) : (
                         <Lock size={14} />
                       )}
                     </span>
-                    <p>{lecture.lectureTitle}</p>
+                    <p>{lecture.title}</p>
                   </div>
                 ))
               ) : (
@@ -133,20 +133,20 @@ const CourseDetail = () => {
               {/* Lecture Title */}
               <h1 className="font-semibold">
                 {course?.lectures?.length > 0
-                  ? course.lectures[0].lectureTitle
+                  ? course.lectures[0].title
                   : "No lecture available"}
               </h1>
               <Separator className="my-2" />
 
               {/* Price */}
               <h1 className="text-lg md:text-xl font-semibold">
-                Course Price: ₹{course?.coursePrice}
+                Course Price: ₹{course?.price}
               </h1>
             </CardContent>
 
             {/* Button */}
             <CardFooter className="flex justify-center p-4">
-              {purchased ? (
+              {isPurchased ? (
                 <Button onClick={handleContinueCourse} className="w-full">
                   Continue Course
                 </Button>

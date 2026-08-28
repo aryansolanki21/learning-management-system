@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const CreateLecture = () => {
-  const [lectureTitle, setLectureTitle] = useState("");
+  const [title, setTitle] = useState("");
 
   const params = useParams();
   const courseId = params.courseId;
@@ -30,7 +30,7 @@ const CreateLecture = () => {
   } = useGetCourseLecturesQuery(courseId);
 
   const createLectureHandler = async () => {
-    await createLecture({ lectureTitle, courseId });
+    await createLecture({ title, courseId });
   };
 
   useEffect(() => {
@@ -66,9 +66,9 @@ const CreateLecture = () => {
           <Label>Title</Label>
           <Input
             type="text"
-            name="lectureTitle"
-            value={lectureTitle}
-            onChange={(event) => setLectureTitle(event.target.value)}
+            name="title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Your Title Name"
           />
         </div>

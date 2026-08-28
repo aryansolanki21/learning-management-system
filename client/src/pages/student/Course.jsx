@@ -12,14 +12,14 @@ const Course = ({ course }) => {
     <Link to={`/course-detail/${course._id}`}>
       <Card className="pt-0 overflow-hidden rounded-lg bg-white shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
         <img
-          src={course.courseThumbnail}
-          alt={course.courseTitle}
+          src={course.thumbnail}
+          alt={course.title}
           className="w-full h-36 object-cover rounded-t-lg"
         />
 
         <CardContent className="px-5 py-4 space-y-3">
           <h1 className="hover:underline font-bold text-lg truncate">
-            {course.courseTitle}
+            {course.title}
           </h1>
 
           <div className="flex items-center justify-between">
@@ -40,10 +40,10 @@ const Course = ({ course }) => {
                 "bg-blue-600 text-white px-2 py-1 text-xs rounded-full"
               }
             >
-              {course.courseLevel}
+              {course.level}
             </Badge>
           </div>
-          <span>₹{course.coursePrice}</span>
+          <span>₹{course.price}</span>
         </CardContent>
       </Card>
     </Link>

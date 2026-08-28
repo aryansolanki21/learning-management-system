@@ -12,8 +12,15 @@ const razorpay = new Razorpay({
 
 export const createCheckoutOrder = async (req, res) => {
   try {
-    const userId = req.id;
+    const userId = req.userId;
     const { courseId } = req.body;
+
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required.",
+      });
+    }
 
     const course = await Course.findById(courseId);
 
@@ -31,8 +38,28 @@ export const createCheckoutOrder = async (req, res) => {
       });
     }
 
+    if (!Number.isFinite(course.price) || course.price <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course price.",
+      });
+    }
+
+    const existingPurchase = await CoursePurchase.findOne({
+      courseId,
+      userId,
+      status: "completed",
+    });
+
+    if (existingPurchase) {
+      return res.status(409).json({
+        success: false,
+        message: "You have already purchased this course.",
+      });
+    }
+
     const options = {
-      amount: Math.round(course.coursePrice * 100),
+      amount: Math.round(course.price * 100),
       currency: "INR",
       receipt: `course_${courseId}_${Date.now()}`,
       notes: {
@@ -45,17 +72,15 @@ export const createCheckoutOrder = async (req, res) => {
     const order = await razorpay.orders.create(options);
 
     // Now create purchase record
-    const newPurchase = new CoursePurchase({
+    await CoursePurchase.create({
       courseId,
       userId,
-      amount: course.coursePrice,
+      amount: course.price,
       status: "pending",
       orderId: order.id,
     });
 
-    await newPurchase.save();
-
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       order,
       key: process.env.RAZORPAY_KEY_ID,
@@ -72,23 +97,36 @@ export const createCheckoutOrder = async (req, res) => {
 
 export const verifyPayment = async (req, res) => {
   try {
-    const userId = req.id;
+    const userId = req.userId;
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification details are required.",
+      });
+    }
 
     // Find the purchase using Razorpay order ID
     const purchase = await CoursePurchase.findOne({
       orderId: razorpay_order_id,
       userId,
-    }).populate({
-      path: "courseId",
-    });
+    }).populate("courseId");
 
     if (!purchase) {
       return res.status(404).json({
         success: false,
         message: "Purchase not found.",
+      });
+    }
+
+    // Prevent duplicate processing
+    if (purchase.status === "completed") {
+      return res.status(200).json({
+        success: true,
+        message: "Payment already verified.",
       });
     }
 
@@ -106,14 +144,6 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    // Prevent duplicate processing
-    if (purchase.status === "completed") {
-      return res.status(200).json({
-        success: true,
-        message: "Payment already verified.",
-      });
-    }
-
     // Save Razorpay payment ID
     purchase.paymentId = razorpay_payment_id;
     purchase.status = "completed";
@@ -121,26 +151,18 @@ export const verifyPayment = async (req, res) => {
     await purchase.save();
 
     // Add course to user's enrolled courses
-    await User.findByIdAndUpdate(
-      userId,
-      {
-        $addToSet: {
-          enrolledCourses: purchase.courseId._id,
-        },
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: {
+        enrolledCourses: purchase.courseId._id,
       },
-      { new: true },
-    );
+    });
 
     // Add user to course's enrolled students
-    await Course.findByIdAndUpdate(
-      purchase.courseId._id,
-      {
-        $addToSet: {
-          enrolledStudents: userId,
-        },
+    await Course.findByIdAndUpdate(purchase.courseId._id, {
+      $addToSet: {
+        enrolledStudents: userId,
       },
-      { new: true },
-    );
+    });
 
     return res.status(200).json({
       success: true,
@@ -159,7 +181,7 @@ export const verifyPayment = async (req, res) => {
 export const getCourseDetailWithPurchaseStatus = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const userId = req.id;
+    const userId = req.userId;
 
     const course = await Course.findById(courseId)
       .populate({
@@ -175,7 +197,7 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
       });
     }
 
-    const purchased = await CoursePurchase.findOne({
+    const isPurchased = await CoursePurchase.findOne({
       userId,
       courseId,
       status: "completed",
@@ -184,7 +206,7 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
     return res.status(200).json({
       success: true,
       course,
-      purchased: !!purchased,
+      isPurchased: !!isPurchased,
     });
   } catch (error) {
     console.error(error);
@@ -198,7 +220,7 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
 
 export const getAllPurchasedCourses = async (req, res) => {
   try {
-    const instructorId = req.id;
+    const instructorId = req.userId;
 
     // Find courses created by the logged-in instructor
     const courses = await Course.find({
@@ -208,17 +230,17 @@ export const getAllPurchasedCourses = async (req, res) => {
     const courseIds = courses.map((course) => course._id);
 
     // Find completed purchases for those courses
-    const purchasedCourse = await CoursePurchase.find({
+    const purchasedCourses = await CoursePurchase.find({
       courseId: { $in: courseIds },
       status: "completed",
     }).populate("courseId");
 
     return res.status(200).json({
       success: true,
-      purchasedCourse,
+      purchasedCourses,
     });
   } catch (error) {
-    console.error("Get purchased courses error:", error);
+    console.error("Failed to fetch purchased courses:", error);
 
     return res.status(500).json({
       success: false,
