@@ -116,17 +116,17 @@ export const searchCourses = async (req, res) => {
       .map((category) => category.trim())
       .filter(Boolean);
 
-    const searchQuery  = {
+    const searchQuery = {
       isPublished: true,
     };
 
     if (query.trim()) {
-       const searchTerm = query.trim();
+      const searchTerm = query.trim();
 
       searchQuery.$or = [
-        { title: { $regex: query.trim(), $options: "i" } },
-        { subtitle: { $regex: query.trim(), $options: "i" } },
-        { category: { $regex: query.trim(), $options: "i" } },
+        { title: { $regex: searchTerm, $options: "i" } },
+        { subtitle: { $regex: searchTerm, $options: "i" } },
+        { category: { $regex: searchTerm, $options: "i" } },
       ];
     }
 
@@ -136,9 +136,7 @@ export const searchCourses = async (req, res) => {
       };
     }
 
-    const sortOptions = {
-      createdAt: -1,
-    };
+    const sortOptions = {};
 
     if (sortByPrice === "low") {
       sortOptions.price = 1;
@@ -146,10 +144,12 @@ export const searchCourses = async (req, res) => {
     } else if (sortByPrice === "high") {
       sortOptions.price = -1;
       sortOptions._id = 1;
+    } else {
+      sortOptions.createdAt = -1;
     }
 
     const [courses, totalCourses] = await Promise.all([
-      Course.find(searchQuery )
+      Course.find(searchQuery)
         .populate({
           path: "creator",
           select: "name photoUrl",
