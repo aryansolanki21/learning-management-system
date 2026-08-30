@@ -2,12 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/toast.jsx";
+
 import {
   useCompleteCourseMutation,
   useGetCourseProgressQuery,
   useIncompleteCourseMutation,
   useUpdateLectureProgressMutation,
 } from "@/features/api/courseProgressApi.js";
+
+import { formatDuration } from "@/utils/formatDuration";
 
 import { CheckCircle, CheckCircle2, CirclePlay } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -129,17 +132,21 @@ const CourseProgress = () => {
             />
           </div>
           {/* Display current watching lecture title */}
-          <div className="mt-2 ">
+          <div className="flex items-center justify-between">
             <h3 className="font-medium text-lg">
               {`Lecture ${
                 courseDetails.lectures.findIndex(
                   (lec) =>
                     lec._id === (currentLecture?._id || initialLecture._id),
                 ) + 1
-              } : ${
-                currentLecture?.title || initialLecture.title
-              }`}
+              } : ${currentLecture?.title || initialLecture.title}`}
             </h3>
+
+            <span className="text-sm text-gray-500">
+              {formatDuration(
+                currentLecture?.duration || initialLecture?.duration,
+              )}
+            </span>
           </div>
         </div>
         {/* Lecture Sidebar  */}
@@ -165,6 +172,10 @@ const CourseProgress = () => {
                       <CardTitle className="text-lg font-medium">
                         {lecture.title}
                       </CardTitle>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDuration(lecture.duration)}
+                      </p>
                     </div>
                   </div>
                   {isLectureCompleted(lecture._id) && (

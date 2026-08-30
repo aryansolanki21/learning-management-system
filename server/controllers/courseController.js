@@ -43,10 +43,15 @@ export const getPublishedCourses = async (_, res) => {
   try {
     const courses = await Course.find({
       isPublished: true,
-    }).populate({
-      path: "creator",
-      select: "name photoUrl",
-    });
+    })
+      .populate({
+        path: "creator",
+        select: "name photoUrl",
+      })
+      .populate({
+        path: "lectures",
+        select: "duration",
+      });
 
     return res.status(200).json({
       success: true,
@@ -528,6 +533,19 @@ export const editLecture = async (req, res) => {
       lecture.publicId = videoInfo.publicId;
     }
 
+    if (videoInfo?.duration !== undefined) {
+      const duration = Number(videoInfo.duration);
+
+      if (!Number.isFinite(duration) || duration < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Lecture duration must be a valid non-negative number.",
+        });
+      }
+
+      lecture.duration = duration;
+    }
+
     if (typeof isPreviewFree === "boolean") {
       lecture.isPreviewFree = isPreviewFree;
     }
@@ -551,7 +569,7 @@ export const editLecture = async (req, res) => {
 
 export const removeLecture = async (req, res) => {
   try {
-    const { lectureId, courseId } = req.params;
+    const { courseId, lectureId } = req.params;
 
     const course = await Course.findById(courseId).select("creator lectures");
 

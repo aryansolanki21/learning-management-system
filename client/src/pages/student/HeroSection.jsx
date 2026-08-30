@@ -1,10 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  PlayCircle,
-} from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
@@ -35,8 +30,8 @@ const HeroSection = () => {
 
             {/* Description */}
             <p className="mt-6 max-w-2xl text-base sm:text-lg text-gray-600 leading-relaxed">
-              Discover practical courses, build real-world skills, and
-              learn from anywhere at your own pace.
+              Discover practical courses, build real-world skills, and learn
+              from anywhere at your own pace.
             </p>
 
             {/* CTA buttons */}
@@ -64,26 +59,17 @@ const HeroSection = () => {
             {/* Benefits */}
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <CheckCircle2
-                  size={17}
-                  className="text-blue-600"
-                />
+                <CheckCircle2 size={17} className="text-blue-600" />
                 Learn anytime
               </div>
 
               <div className="flex items-center gap-2">
-                <CheckCircle2
-                  size={17}
-                  className="text-blue-600"
-                />
+                <CheckCircle2 size={17} className="text-blue-600" />
                 Expert-led courses
               </div>
 
               <div className="flex items-center gap-2">
-                <CheckCircle2
-                  size={17}
-                  className="text-blue-600"
-                />
+                <CheckCircle2 size={17} className="text-blue-600" />
                 Track your progress
               </div>
             </div>
@@ -95,4 +81,3 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
-

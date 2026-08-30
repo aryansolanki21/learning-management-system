@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator.jsx";
 
+import { formatDuration } from "@/utils/formatDuration";
 import { useGetCourseDetailWithPurchaseStatusQuery } from "@/features/api/purchaseApi.js";
 
 import ReactPlayer from "react-player";
@@ -46,9 +47,7 @@ const CourseDetail = () => {
     <div className="space-y-5">
       <div className="bg-[#2D2F31] text-white">
         <div className="max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2">
-          <h1 className="font-bold text-2xl md:text-3xl">
-            {course?.title}
-          </h1>
+          <h1 className="font-bold text-2xl md:text-3xl">{course?.title}</h1>
           <p className="text-base md:text-lg">{course?.title}</p>
           <p>
             Created By{" "}
@@ -95,7 +94,14 @@ const CourseDetail = () => {
                         <Lock size={14} />
                       )}
                     </span>
-                    <p>{lecture.title}</p>
+
+                    <div className="flex-1 flex items-center justify-between">
+                      <p>{lecture.title}</p>
+
+                      <span className="text-xs text-gray-500">
+                        {formatDuration(lecture.duration)}
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (

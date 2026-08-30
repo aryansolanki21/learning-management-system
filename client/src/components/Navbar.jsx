@@ -50,6 +50,15 @@ const Navbar = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get("query") || "";
+
+    if (location.pathname === "/course/search") {
+      setSearchQuery(query);
+    }
+  }, [location.pathname, location.search]);
+
   const searchHandler = (event) => {
     event.preventDefault();
 
@@ -57,7 +66,6 @@ const Navbar = () => {
 
     if (query) {
       navigate(`/course/search?query=${encodeURIComponent(query)}`);
-      setSearchQuery("");
     } else {
       navigate("/course/search");
     }
@@ -86,25 +94,33 @@ const Navbar = () => {
   }, [data?.message, isSuccess, navigate]);
 
   const isMyLearningActive = location.pathname === "/my-learning";
+  const isSearchActive = location.pathname === "/course/search";
 
   return (
-    <header className="h-16 bg-white border-b fixed top-0 left-0 right-0 z-50">
-      {/* Desktop Navbar */}
-      <div className="max-w-7xl mx-auto h-full px-4 md:px-6 hidden md:flex items-center gap-6">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
+    <header className="h-16 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+      {" "}
+      <div className="max-w-7xl mx-auto h-full px-4 md:px-6 hidden md:flex items-center gap-5">
+        {/* Logo */}{" "}
+        <Link
+          to="/"
+          className="flex items-center gap-2 shrink-0"
+          aria-label="E-Learning home"
+        >
+          {" "}
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white">
-            <School size={22} />
+            {" "}
+            <School size={22} />{" "}
           </div>
-
           <span className="font-bold text-xl tracking-tight">E-Learning</span>
         </Link>
-
         {/* Explore */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" className="flex items-center gap-1 px-3">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-1 px-3 font-medium"
+              >
                 Explore
                 <ChevronDown size={16} />
               </Button>
@@ -146,30 +162,32 @@ const Navbar = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Search */}
-        <form onSubmit={searchHandler} className="flex-1 max-w-xl mx-auto">
-          <div className="relative">
+        {/* Global Course Search */}
+        <form onSubmit={searchHandler} className="flex-1 max-w-2xl">
+          <div
+            className={`relative flex items-center rounded-full transition-all ${
+              isSearchActive ? "bg-white ring-2 ring-blue-100" : "bg-gray-50"
+            }`}
+          >
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-4 text-gray-500 pointer-events-none"
             />
 
             <Input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search for courses, skills, or topics"
-              className="h-10 pl-11 pr-4 rounded-full bg-gray-50 border-gray-300 focus-visible:ring-1 focus-visible:ring-blue-500"
+              aria-label="Search courses"
+              className="h-10 pl-11 pr-4 rounded-full bg-transparent border-gray-300 focus-visible:ring-1 focus-visible:ring-blue-500"
             />
           </div>
         </form>
-
         {/* Right Navigation */}
         <nav className="flex items-center gap-2 shrink-0">
           {user ? (
             <>
-              {/* My Learning */}
               <Button
                 variant="ghost"
                 className={`font-medium ${
@@ -207,7 +225,7 @@ const Navbar = () => {
                 />
 
                 <DropdownMenuContent align="end" className="w-60">
-                  <DropdownMenuLabel>
+                  <div className="px-2 py-1.5">
                     <div className="flex flex-col">
                       <span className="font-semibold">{user?.name}</span>
 
@@ -215,7 +233,7 @@ const Navbar = () => {
                         {user?.email}
                       </span>
                     </div>
-                  </DropdownMenuLabel>
+                  </div>
 
                   <DropdownMenuSeparator />
 
@@ -275,10 +293,13 @@ const Navbar = () => {
           )}
         </nav>
       </div>
-
       {/* Mobile Navbar */}
       <div className="flex md:hidden items-center justify-between h-full px-4">
-        <Link to="/" className="flex items-center gap-2">
+        <Link
+          to="/"
+          className="flex items-center gap-2"
+          aria-label="E-Learning home"
+        >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white">
             <School size={19} />
           </div>
@@ -313,8 +334,14 @@ const MobileNavbar = ({
     <Sheet>
       <SheetTrigger
         render={
-          <Button size="icon" variant="outline" className="rounded-full">
-            <Menu />
+          <Button
+            size="icon"
+            variant="outline"
+            className="rounded-full"
+            aria-label="Open navigation menu"
+          >
+            {" "}
+            <Menu />{" "}
           </Button>
         }
       />
@@ -336,13 +363,15 @@ const MobileNavbar = ({
           <div className="relative">
             <Search
               size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
             />
 
             <Input
+              type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search courses..."
+              aria-label="Search courses"
               className="pl-9 rounded-full"
             />
           </div>

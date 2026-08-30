@@ -48,6 +48,7 @@ const LectureTab = () => {
           ? {
               videoUrl: lecture.videoUrl,
               publicId: lecture.publicId,
+              duration: lecture.duration || 0,
             }
           : null,
       );
@@ -85,6 +86,7 @@ const LectureTab = () => {
         setUploadVideoInfo({
           videoUrl: res.data.data.url,
           publicId: res.data.data.public_id,
+          duration: res.data.data.duration || 0,
         });
 
         toast.add({
@@ -124,7 +126,10 @@ const LectureTab = () => {
   };
 
   const removeLectureHandler = async () => {
-    await removeLecture(courseId, lectureId);
+    await removeLecture({
+      courseId,
+      lectureId,
+    }).unwrap();
   };
 
   useEffect(() => {
