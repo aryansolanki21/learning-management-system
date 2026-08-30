@@ -53,6 +53,18 @@ export const getPublishedCourses = async (_, res) => {
         select: "duration",
       });
 
+    // Sort courses by number of enrolled students
+    courses.sort((a, b) => {
+      const enrollmentDifference =
+        (b.enrolledStudents?.length || 0) - (a.enrolledStudents?.length || 0);
+
+      if (enrollmentDifference !== 0) {
+        return enrollmentDifference;
+      }
+
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
     return res.status(200).json({
       success: true,
       courses,
