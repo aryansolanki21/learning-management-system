@@ -16,6 +16,7 @@ import { useGetCourseDetailWithPurchaseStatusQuery } from "@/features/api/purcha
 import ReactPlayer from "react-player";
 import { BadgeInfo, Lock, PlayCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseReviews from "./CourseReviews.jsx";
 
 const CourseDetail = () => {
   const params = useParams();
@@ -48,7 +49,7 @@ const CourseDetail = () => {
       <div className="bg-[#2D2F31] text-white">
         <div className="max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2">
           <h1 className="font-bold text-2xl md:text-3xl">{course?.title}</h1>
-          <p className="text-base md:text-lg">{course?.title}</p>
+          <p className="text-base md:text-lg">{course?.subtitle}</p>
           <p>
             Created By{" "}
             <span className="text-[#C0C4FC] underline italic">
@@ -162,6 +163,11 @@ const CourseDetail = () => {
             </CardFooter>
           </Card>
         </div>
+      </div>
+
+      {/* Reviews & Ratings */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-10">
+        <CourseReviews courseId={courseId} isPurchased={isPurchased} />
       </div>
     </div>
   );

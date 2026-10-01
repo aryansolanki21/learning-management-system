@@ -91,11 +91,27 @@ const CourseProgress = () => {
   };
 
   const handleCompleteCourse = async () => {
-    await completeCourse(courseId);
+    try {
+      await completeCourse(courseId).unwrap();
+    } catch (error) {
+      toast.add({
+        title: "Unable to complete course",
+        description:
+          error?.data?.message || "Please complete all lectures first.",
+      });
+    }
   };
 
   const handleInCompleteCourse = async () => {
-    await incompleteCourse(courseId);
+    try {
+      await incompleteCourse(courseId).unwrap();
+    } catch (error) {
+      toast.add({
+        title: "Unable to update course status",
+        description:
+          error?.data?.message || "Something went wrong. Please try again.",
+      });
+    }
   };
 
   return (

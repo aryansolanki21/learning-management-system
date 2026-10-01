@@ -1,48 +1,76 @@
 import { Badge } from "@/components/ui/badge.jsx";
 import { Link } from "react-router-dom";
-import { Clock3 } from "lucide-react";
+import { Clock3, Star } from "lucide-react";
 
 const SearchResult = ({ course }) => {
+  const averageRating = Number(course.averageRating) || 0;
+  const totalReviews = Number(course.totalReviews) || 0;
+
   return (
     <Link
       to={`/course-detail/${course._id}`}
       className="group block border-b border-gray-200 py-5 first:pt-2 last:border-b-0"
     >
-      {" "}
-      <div className="flex flex-col sm:flex-row gap-5">
-        {/* Course thumbnail */}{" "}
-        <div className="w-full sm:w-56 md:w-64 shrink-0">
-          {" "}
+      <div className="flex flex-col gap-5 sm:flex-row">
+        {/* Course thumbnail */}
+        <div className="w-full shrink-0 sm:w-56 md:w-64">
           <img
             src={course.thumbnail}
             alt={course.title}
-            className="w-full h-40 sm:h-32 md:h-36 object-cover rounded-lg border border-gray-200 group-hover:opacity-90 transition-opacity"
-          />{" "}
+            className="h-40 w-full rounded-lg border border-gray-200 object-cover transition-opacity group-hover:opacity-90 sm:h-32 md:h-36"
+          />
         </div>
+
         {/* Course information */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col h-full">
+        <div className="min-w-0 flex-1">
+          <div className="flex h-full flex-col">
             <div>
-              <h2 className="font-bold text-lg md:text-xl text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              {/* Course title */}
+              <h2 className="line-clamp-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-600 md:text-xl">
                 {course.title}
               </h2>
 
+              {/* Subtitle */}
               {course.subtitle && (
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                <p className="mt-2 line-clamp-2 text-sm text-gray-600">
                   {course.subtitle}
                 </p>
               )}
 
-              <p className="text-sm text-gray-700 mt-3">
+              {/* Instructor */}
+              <p className="mt-3 text-sm text-gray-700">
                 By{" "}
                 <span className="font-semibold">
                   {course.creator?.name || "Instructor"}
                 </span>
               </p>
+
+              {/* Rating */}
+              <div className="mt-3 flex min-h-5 items-center gap-1.5 text-sm">
+                {totalReviews > 0 ? (
+                  <>
+                    <Star
+                      size={16}
+                      className="shrink-0 fill-yellow-400 text-yellow-400"
+                    />
+
+                    <span className="font-semibold text-gray-900">
+                      {averageRating.toFixed(1)}
+                    </span>
+
+                    <span className="text-gray-500">
+                      ({totalReviews}{" "}
+                      {totalReviews === 1 ? "review" : "reviews"})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-gray-500">No ratings yet</span>
+                )}
+              </div>
             </div>
 
             {/* Course metadata */}
-            <div className="flex flex-wrap items-center gap-2 mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {course.level && (
                 <Badge variant="secondary" className="font-medium">
                   {course.level}
@@ -62,11 +90,12 @@ const SearchResult = ({ course }) => {
             </div>
           </div>
         </div>
+
         {/* Price */}
-        <div className="sm:w-28 shrink-0 sm:text-right">
+        <div className="shrink-0 sm:w-28 sm:text-right">
           <p className="text-xl font-bold text-gray-900">₹{course.price}</p>
 
-          <p className="text-xs text-gray-500 mt-1">Full course</p>
+          <p className="mt-1 text-xs text-gray-500">Full course</p>
         </div>
       </div>
     </Link>

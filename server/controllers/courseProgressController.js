@@ -131,6 +131,15 @@ export const markAsCompleted = async (req, res) => {
     const { courseId } = req.params;
     const userId = req.userId;
 
+    const course = await Course.findById(courseId).select("lectures");
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
     const courseProgress = await CourseProgress.findOne({
       courseId,
       userId,
@@ -143,9 +152,20 @@ export const markAsCompleted = async (req, res) => {
       });
     }
 
-    courseProgress.lectureProgress.forEach(
-      (lectureProgress) => (lectureProgress.viewed = true),
-    );
+    // A course can only be completed after all lectures are viewed.
+    const totalLectures = course.lectures.length;
+
+    const viewedLectureCount = courseProgress.lectureProgress.filter(
+      (lectureProgress) => lectureProgress.viewed,
+    ).length;
+
+    if (totalLectures === 0 || viewedLectureCount !== totalLectures) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Complete all lectures before marking the course as completed.",
+      });
+    }
 
     courseProgress.completed = true;
 

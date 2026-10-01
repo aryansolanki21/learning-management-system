@@ -1,5 +1,7 @@
 import { Course } from "../models/course.model.js";
 import { Lecture } from "../models/lecture.model.js";
+import { Review } from "../models/review.model.js";
+
 import {
   deleteMediaFromCloudinary,
   deleteVideoFromCloudinary,
@@ -53,8 +55,50 @@ export const getPublishedCourses = async (_, res) => {
         select: "duration",
       });
 
-    // Sort courses by number of enrolled students
-    courses.sort((a, b) => {
+    // Fetch review statistics for all published courses in one query.
+    const courseIds = courses.map((course) => course._id);
+
+    const reviewStats = await Review.aggregate([
+      {
+        $match: {
+          course: { $in: courseIds },
+        },
+      },
+      {
+        $group: {
+          _id: "$course",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Map statistics by course ID for efficient lookup.
+    const reviewStatsMap = new Map(
+      reviewStats.map((stat) => [
+        stat._id.toString(),
+        {
+          averageRating: Number(stat.averageRating.toFixed(1)),
+          totalReviews: stat.totalReviews,
+        },
+      ]),
+    );
+
+    // Attach rating information to each course.
+    const coursesWithReviews = courses.map((course) => {
+      const courseData = course.toObject();
+
+      const stats = reviewStatsMap.get(course._id.toString());
+
+      return {
+        ...courseData,
+        averageRating: stats?.averageRating ?? 0,
+        totalReviews: stats?.totalReviews ?? 0,
+      };
+    });
+
+    // Sort by enrollment count; break ties using newer courses first.
+    coursesWithReviews.sort((a, b) => {
       const enrollmentDifference =
         (b.enrolledStudents?.length || 0) - (a.enrolledStudents?.length || 0);
 
@@ -67,7 +111,7 @@ export const getPublishedCourses = async (_, res) => {
 
     return res.status(200).json({
       success: true,
-      courses,
+      courses: coursesWithReviews,
     });
   } catch (error) {
     console.error("Failed to fetch published courses:", error);
@@ -121,6 +165,7 @@ export const searchCourses = async (req, res) => {
     } = req.query;
 
     const currentPage = Math.max(Number.parseInt(page, 10) || 1, 1);
+
     const pageSize = Math.min(
       Math.max(Number.parseInt(limit, 10) || 10, 1),
       50,
@@ -137,6 +182,7 @@ export const searchCourses = async (req, res) => {
       isPublished: true,
     };
 
+    // Search by title, subtitle or category
     if (query.trim()) {
       const searchTerm = query.trim();
 
@@ -147,12 +193,14 @@ export const searchCourses = async (req, res) => {
       ];
     }
 
+    // Filter by category
     if (categoryList.length > 0) {
       searchQuery.category = {
         $in: categoryList,
       };
     }
 
+    // Price sorting
     const sortOptions = {};
 
     if (sortByPrice === "low") {
@@ -165,6 +213,7 @@ export const searchCourses = async (req, res) => {
       sortOptions.createdAt = -1;
     }
 
+    // Fetch paginated courses and total count together
     const [courses, totalCourses] = await Promise.all([
       Course.find(searchQuery)
         .populate({
@@ -178,11 +227,61 @@ export const searchCourses = async (req, res) => {
       Course.countDocuments(searchQuery),
     ]);
 
+    // Get review statistics only for courses on the current page.
+    const courseIds = courses.map((course) => course._id);
+
+    let reviewStats = [];
+
+    if (courseIds.length > 0) {
+      reviewStats = await Review.aggregate([
+        {
+          $match: {
+            course: { $in: courseIds },
+          },
+        },
+        {
+          $group: {
+            _id: "$course",
+            averageRating: {
+              $avg: "$rating",
+            },
+            totalReviews: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
+    }
+
+    // Map review statistics by course ID
+    const reviewStatsMap = new Map(
+      reviewStats.map((stat) => [
+        stat._id.toString(),
+        {
+          averageRating: Number(stat.averageRating.toFixed(1)),
+          totalReviews: stat.totalReviews,
+        },
+      ]),
+    );
+
+    // Attach review statistics to each course
+    const coursesWithReviews = courses.map((course) => {
+      const courseData = course.toObject();
+
+      const stats = reviewStatsMap.get(course._id.toString());
+
+      return {
+        ...courseData,
+        averageRating: stats?.averageRating ?? 0,
+        totalReviews: stats?.totalReviews ?? 0,
+      };
+    });
+
     const totalPages = Math.ceil(totalCourses / pageSize);
 
     return res.status(200).json({
       success: true,
-      courses,
+      courses: coursesWithReviews,
       pagination: {
         currentPage,
         pageSize,
