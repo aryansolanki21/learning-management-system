@@ -11,7 +11,17 @@ const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("query") || "";
 
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const categoriesParam = searchParams.get("categories");
+
+    return categoriesParam
+      ? categoriesParam
+          .split(",")
+          .map((category) => category.trim())
+          .filter(Boolean)
+      : [];
+  });
+
   const [sortByPrice, setSortByPrice] = useState("");
 
   const { data, isLoading, isError } = useSearchCoursesQuery({

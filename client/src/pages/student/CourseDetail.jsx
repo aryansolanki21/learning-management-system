@@ -19,8 +19,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CourseReviews from "./CourseReviews.jsx";
 
 const CourseDetail = () => {
-  const params = useParams();
-  const courseId = params.courseId;
+  const { courseId } = useParams();
   const navigate = useNavigate();
 
   const { data, isLoading, isError } =

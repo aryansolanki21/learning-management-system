@@ -39,7 +39,7 @@ export const authApi = createApi({
           const { data } = await queryFulfilled;
           dispatch(userLoggedIn({ user: data.user }));
         } catch (error) {
-          console.error(error);
+          console.error("Failed to login:", error);
         }
       },
     }),
@@ -58,7 +58,7 @@ export const authApi = createApi({
           dispatch(userLoggedOut());
           dispatch(authApi.util.resetApiState());
         } catch (error) {
-          console.error(error);
+          console.error("Failed to logout:", error);
         }
       },
     }),
@@ -76,7 +76,7 @@ export const authApi = createApi({
           const { data } = await queryFulfilled;
           dispatch(userLoggedIn({ user: data.user }));
         } catch (error) {
-          console.error(error);
+          console.error("Failed to load user:", error);
         }
       },
     }),

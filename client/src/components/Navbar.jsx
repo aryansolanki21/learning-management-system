@@ -128,38 +128,42 @@ const Navbar = () => {
           />
 
           <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Explore Learning</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Explore Learning</DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => navigate("/course/search")}
-            >
-              <BookOpen className="mr-2 h-4 w-4" />
-              Browse All Courses
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigate("/course/search")}
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Browse All Courses
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => navigate("/course/search?query=web%20development")}
-            >
-              Web Development
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() =>
+                  navigate("/course/search?query=web%20development")
+                }
+              >
+                Web Development
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => navigate("/course/search?query=javascript")}
-            >
-              JavaScript
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigate("/course/search?query=javascript")}
+              >
+                JavaScript
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => navigate("/course/search?query=react")}
-            >
-              React
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigate("/course/search?query=react")}
+              >
+                React
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Global Course Search */}

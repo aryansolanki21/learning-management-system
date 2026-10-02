@@ -18,8 +18,8 @@ const Course = ({ course }) => {
     ) || 0;
 
   // Review statistics provided by getPublishedCourses.
-  const averageRating = course.averageRating ?? 0;
-  const totalReviews = course.totalReviews ?? 0;
+  const averageRating = Number(course.averageRating ?? 0);
+  const totalReviews = Number(course.totalReviews ?? 0);
 
   const instructorName = course.creator?.name || "Instructor";
 

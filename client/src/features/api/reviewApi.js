@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { courseApi } from "@/features/api/courseApi.js";
 
 const REVIEW_API = "http://localhost:8080/api/v1/review";
 
@@ -39,6 +40,16 @@ export const reviewApi = createApi({
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Reviews", id: courseId },
       ],
+
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          dispatch(courseApi.util.invalidateTags(["PublishedCourses"]));
+        } catch (error) {
+          console.error("Failed to create review:", error);
+        }
+      },
     }),
 
     // Update logged-in user's review
@@ -55,6 +66,16 @@ export const reviewApi = createApi({
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Reviews", id: courseId },
       ],
+
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          dispatch(courseApi.util.invalidateTags(["PublishedCourses"]));
+        } catch (error) {
+          console.error("Failed to update review:", error);
+        }
+      },
     }),
 
     // Delete logged-in user's review
@@ -67,6 +88,16 @@ export const reviewApi = createApi({
       invalidatesTags: (result, error, courseId) => [
         { type: "Reviews", id: courseId },
       ],
+
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          dispatch(courseApi.util.invalidateTags(["PublishedCourses"]));
+        } catch (error) {
+          console.error("Failed to delete review:", error);
+        }
+      },
     }),
   }),
 });

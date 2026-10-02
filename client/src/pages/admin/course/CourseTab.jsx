@@ -37,6 +37,7 @@ const categories = [
   { label: "Frontend Development", value: "Frontend Development" },
   { label: "Fullstack Development", value: "Fullstack Development" },
   { label: "MERN Stack Development", value: "MERN Stack Development" },
+  { label: "Backend Development", value: "Backend Development" },
   { label: "Javascript", value: "Javascript" },
   { label: "Python", value: "Python" },
   { label: "Docker", value: "Docker" },
@@ -208,8 +209,8 @@ const CourseTab = () => {
             <Label>Subtitle</Label>
             <Input
               type="text"
-              name="subTitle"
-              value={input.subTitle}
+              name="subtitle"
+              value={input.subtitle}
               onChange={changeEventHandler}
               placeholder="Ex. Become a Fullstack developer from zero to hero in 2 months"
             />
