@@ -1,4 +1,7 @@
 import { User } from "../models/user.model.js";
+import { Course } from "../models/course.model.js";
+import { CourseProgress } from "../models/courseProgress.model.js";
+
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
@@ -394,6 +397,119 @@ export const updateProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update profile.",
+    });
+  }
+};
+
+// Retrieve enrolled courses with learning progress
+export const getMyLearning = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Get the authenticated user's enrolled course IDs.
+    const user = await User.findById(userId).select("enrolledCourses");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const courseIds = user.enrolledCourses || [];
+
+    if (courseIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        courses: [],
+      });
+    }
+
+    // Fetch all enrolled courses in one query.
+    const courses = await Course.find({
+      _id: { $in: courseIds },
+    })
+      .populate({
+        path: "creator",
+        select: "name photoUrl",
+      })
+      .select(
+        "title subtitle category level price thumbnail creator lectures createdAt updatedAt",
+      );
+
+    // Fetch progress for all enrolled courses in one query.
+    const progressRecords = await CourseProgress.find({
+      userId,
+      courseId: { $in: courseIds },
+    }).select("courseId completed lectureProgress");
+
+    // Map progress by course ID for O(1) lookup.
+    const progressMap = new Map(
+      progressRecords.map((progress) => [
+        progress.courseId.toString(),
+        progress,
+      ]),
+    );
+
+    const coursesWithProgress = courses.map((course) => {
+      const courseId = course._id.toString();
+      const progress = progressMap.get(courseId);
+
+      const totalLectures = course.lectures?.length || 0;
+
+      // Count only viewed lectures that currently belong to this course.
+      const courseLectureIds = new Set(
+        (course.lectures || []).map((lectureId) => lectureId.toString()),
+      );
+
+      const completedLectures = progress
+        ? progress.lectureProgress.filter(
+            (lectureProgress) =>
+              lectureProgress.viewed &&
+              courseLectureIds.has(lectureProgress.lectureId.toString()),
+          ).length
+        : 0;
+
+      const progressPercentage =
+        totalLectures > 0
+          ? Math.round((completedLectures / totalLectures) * 100)
+          : 0;
+
+      const completed =
+        totalLectures > 0 && completedLectures === totalLectures;
+
+      return {
+        ...course.toObject(),
+
+        progress: {
+          totalLectures,
+          completedLectures,
+          progressPercentage,
+          completed,
+        },
+      };
+    });
+
+    // Keep the same order as User.enrolledCourses.
+    const courseOrder = new Map(
+      courseIds.map((courseId, index) => [courseId.toString(), index]),
+    );
+
+    coursesWithProgress.sort(
+      (a, b) =>
+        courseOrder.get(a._id.toString()) - courseOrder.get(b._id.toString()),
+    );
+
+    return res.status(200).json({
+      success: true,
+      courses: coursesWithProgress,
+    });
+  } catch (error) {
+    console.error("Failed to fetch My Learning courses:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch learning progress.",
     });
   }
 };

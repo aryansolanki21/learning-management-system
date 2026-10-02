@@ -17,8 +17,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const CourseProgress = () => {
-  const params = useParams();
-  const courseId = params.courseId;
+  const { courseId } = useParams();
 
   const { data, isLoading, isError } = useGetCourseProgressQuery(courseId);
 
@@ -62,18 +61,21 @@ const CourseProgress = () => {
 
   const { courseDetails, progress, completed } = data.data;
 
-  const { title } = courseDetails;
-
   if (!courseDetails?.lectures?.length) {
     return <p>No lectures available for this course.</p>;
   }
 
+  const { title } = courseDetails;
+
   const initialLecture = currentLecture || courseDetails.lectures[0];
 
   const isLectureCompleted = (lectureId) => {
-    return progress.some(
-      (prog) =>
-        prog.lectureId?.toString() === lectureId?.toString() && prog.viewed,
+    return (
+      Array.isArray(progress) &&
+      progress.some(
+        (prog) =>
+          prog.lectureId?.toString() === lectureId?.toString() && prog.viewed,
+      )
     );
   };
 
@@ -87,7 +89,6 @@ const CourseProgress = () => {
 
   const handleSelectLecture = (lecture) => {
     setCurrentLecture(lecture);
-    handleLectureProgress(lecture._id);
   };
 
   const handleCompleteCourse = async () => {
@@ -134,22 +135,24 @@ const CourseProgress = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Video section  */}
-        <div className="flex-1 md:w-3/5 h-fit rounded-lg shadow-lg p-4">
-          <div>
+      <div className="flex flex-col items-start gap-6 md:flex-row">
+        {/* Video section */}
+        <div className="min-w-0 flex-1 rounded-lg p-4 shadow-lg">
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
             <video
               src={currentLecture?.videoUrl || initialLecture?.videoUrl}
               controls
-              className="w-full h-auto md:rounded-lg"
+              playsInline
+              className="h-full w-full object-contain"
               onPlay={() =>
                 handleLectureProgress(currentLecture?._id || initialLecture._id)
               }
             />
           </div>
+
           {/* Display current watching lecture title */}
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-lg">
+          <div className="mt-2 flex items-start justify-between gap-3">
+            <h3 className="text-lg font-medium">
               {`Lecture ${
                 courseDetails.lectures.findIndex(
                   (lec) =>
@@ -158,13 +161,14 @@ const CourseProgress = () => {
               } : ${currentLecture?.title || initialLecture.title}`}
             </h3>
 
-            <span className="text-sm text-gray-500">
+            <span className="shrink-0 text-sm text-gray-500">
               {formatDuration(
                 currentLecture?.duration || initialLecture?.duration,
               )}
             </span>
           </div>
         </div>
+
         {/* Lecture Sidebar  */}
         <div className="flex flex-col w-full md:w-2/5 border-t md:border-t-0 md:border-l border-gray-200 md:pl-4 pt-4 md:pt-0">
           <h2 className="font-semibold text-xl mb-4">Course Lecture</h2>

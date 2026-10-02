@@ -3,7 +3,7 @@ import { userLoggedIn, userLoggedOut } from "../authSlice.js";
 
 const USER_API = "http://localhost:8080/api/v1/user/";
 
-// RTK Query endpoints for authentication and user profile
+// RTK Query endpoints for authentication, user profile, and learning
 export const authApi = createApi({
   reducerPath: "authApi",
 
@@ -12,7 +12,7 @@ export const authApi = createApi({
     credentials: "include",
   }),
 
-  tagTypes: ["User"],
+  tagTypes: ["User", "MyLearning"],
 
   endpoints: (builder) => ({
     registerUser: builder.mutation({
@@ -32,7 +32,7 @@ export const authApi = createApi({
         body: inputData,
       }),
 
-      invalidatesTags: ["User"],
+      invalidatesTags: ["User", "MyLearning"],
 
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
@@ -50,7 +50,7 @@ export const authApi = createApi({
         method: "POST",
       }),
 
-      invalidatesTags: ["User"],
+      invalidatesTags: ["User", "MyLearning"],
 
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
@@ -80,7 +80,7 @@ export const authApi = createApi({
         }
       },
     }),
-    
+
     updateUser: builder.mutation({
       query: (formData) => ({
         url: "profile/update",
@@ -89,6 +89,16 @@ export const authApi = createApi({
       }),
 
       invalidatesTags: ["User"],
+    }),
+
+    // Fetch enrolled courses with learning progress
+    getMyLearning: builder.query({
+      query: () => ({
+        url: "my-learning",
+        method: "GET",
+      }),
+
+      providesTags: ["MyLearning"],
     }),
   }),
 });
@@ -99,4 +109,5 @@ export const {
   useLogoutUserMutation,
   useLoadUserQuery,
   useUpdateUserMutation,
+  useGetMyLearningQuery,
 } = authApi;

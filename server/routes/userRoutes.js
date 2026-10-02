@@ -1,10 +1,11 @@
 import express from "express";
 import {
-  getUserProfile,
+  register,
   login,
   logout,
   refreshAccessToken,
-  register,
+  getMyLearning,
+  getUserProfile,
   updateProfile,
 } from "../controllers/userController.js";
 
@@ -24,5 +25,8 @@ router.route("/profile").get(authenticateUser, getUserProfile);
 router
   .route("/profile/update")
   .put(authenticateUser, upload.single("profilePhoto"), updateProfile);
+
+// Retrieve enrolled courses with learning progress
+router.route("/my-learning").get(authenticateUser, getMyLearning);
 
 export default router;
