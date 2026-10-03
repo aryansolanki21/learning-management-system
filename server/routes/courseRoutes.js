@@ -17,6 +17,10 @@ import {
 } from "../controllers/courseController.js";
 import upload from "../utils/multer.js";
 
+import {
+  getRecommendedCourses,
+} from "../controllers/recommendationController.js";
+
 const router = express.Router();
 
 router
@@ -26,6 +30,8 @@ router
 router.route("/search").get(searchCourses);
 
 router.route("/published-courses").get(getPublishedCourses);
+
+router.route("/recommended").get(authenticateUser, getRecommendedCourses);
 
 router
   .route("/:courseId")
@@ -45,5 +51,6 @@ router
   .delete(authenticateUser, removeLecture);
 
 router.route("/lecture/:lectureId").get(authenticateUser, getLectureById);
+
 
 export default router;

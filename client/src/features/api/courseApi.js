@@ -4,13 +4,18 @@ const COURSE_API = "http://localhost:8080/api/v1/course";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
-  tagTypes: ["Refetch_Creator_Course", "Refetch_Lecture", "PublishedCourses"],
+  tagTypes: [
+    "Refetch_Creator_Course",
+    "Refetch_Lecture",
+    "PublishedCourses",
+    "RecommendedCourses",
+  ],
 
   baseQuery: fetchBaseQuery({
     baseUrl: COURSE_API,
     credentials: "include",
   }),
-  
+
   endpoints: (builder) => ({
     createCourse: builder.mutation({
       query: ({ title, category }) => ({
@@ -51,6 +56,15 @@ export const courseApi = createApi({
       }),
 
       providesTags: ["PublishedCourses"],
+    }),
+
+    getRecommendedCourses: builder.query({
+      query: () => ({
+        url: "/recommended",
+        method: "GET",
+      }),
+
+      providesTags: ["RecommendedCourses"],
     }),
 
     getCreatorCourses: builder.query({
@@ -135,6 +149,7 @@ export const {
   useCreateCourseMutation,
   useSearchCoursesQuery,
   useGetPublishedCoursesQuery,
+  useGetRecommendedCoursesQuery,
   useGetCreatorCoursesQuery,
   useGetCourseByIdQuery,
   useEditCourseMutation,
