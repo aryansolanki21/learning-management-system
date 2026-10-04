@@ -1,6 +1,8 @@
 import { Course } from "../models/course.model.js";
 import { Lecture } from "../models/lecture.model.js";
 import { Review } from "../models/review.model.js";
+import { User } from "../models/user.model.js";
+import { CourseProgress } from "../models/courseProgress.model.js";
 
 import {
   deleteMediaFromCloudinary,
@@ -8,22 +10,105 @@ import {
   uploadMedia,
 } from "../utils/cloudinary.js";
 
+const getCloudinaryPublicIdFromUrl = (url) => {
+  if (!url) {
+    return null;
+  }
+
+  const uploadMarker = "/upload/";
+  const uploadIndex = url.indexOf(uploadMarker);
+
+  if (uploadIndex === -1) {
+    return null;
+  }
+
+  let publicId = url.slice(uploadIndex + uploadMarker.length);
+
+  // Remove the Cloudinary version segment, e.g. v1234567890/
+  publicId = publicId.replace(/^v\d+\//, "");
+
+  // Remove file extension.
+  publicId = publicId.replace(/\.[^/.]+$/, "");
+
+  return publicId || null;
+};
+
 // ==========  Course functions  =========================
 export const createCourse = async (req, res) => {
-  try {
-    const { title, category } = req.body;
+  let uploadedThumbnailPublicId = null;
 
-    if (!title?.trim() || !category?.trim()) {
+  try {
+    const { title, subtitle, description, category, level, price } = req.body;
+
+    const trimmedTitle = title?.trim();
+    const trimmedSubtitle = subtitle?.trim() || "";
+    const trimmedDescription = description?.trim() || "";
+    const trimmedCategory = category?.trim();
+
+    // Required fields
+    if (!trimmedTitle || !trimmedCategory) {
       return res.status(400).json({
         success: false,
         message: "Course title and category are required.",
       });
     }
 
+    // Validate course level when provided.
+    const validLevels = ["Beginner", "Intermediate", "Advanced"];
+
+    if (level && !validLevels.includes(level)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course level.",
+      });
+    }
+
+    // Price is optional; default to 0.
+    const parsedPrice = price === undefined || price === "" ? 0 : Number(price);
+
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be a valid non-negative number.",
+      });
+    }
+
+    let thumbnailUrl = "";
+
+    // Upload course thumbnail when provided.
+    if (req.file) {
+      if (!req.file.mimetype?.startsWith("image/")) {
+        return res.status(400).json({
+          success: false,
+          message: "Course thumbnail must be an image.",
+        });
+      }
+
+      const cloudResponse = await uploadMedia(req.file.path);
+
+      if (!cloudResponse?.secure_url) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload course thumbnail.",
+        });
+      }
+
+      thumbnailUrl = cloudResponse.secure_url;
+      uploadedThumbnailPublicId = cloudResponse.public_id || null;
+    }
+
     const course = await Course.create({
-      title: title.trim(),
-      category: category.trim(),
+      title: trimmedTitle,
+      subtitle: trimmedSubtitle,
+      description: trimmedDescription,
+      category: trimmedCategory,
+      level: level || undefined,
+      price: parsedPrice,
+      thumbnail: thumbnailUrl,
       creator: req.userId,
+
+      // New courses start as drafts.
+      isPublished: false,
     });
 
     return res.status(201).json({
@@ -32,6 +117,16 @@ export const createCourse = async (req, res) => {
       course,
     });
   } catch (error) {
+    // If Cloudinary upload succeeded but database creation failed,
+    // remove the uploaded thumbnail to avoid leaving an unused file.
+    if (uploadedThumbnailPublicId) {
+      try {
+        await deleteMediaFromCloudinary(uploadedThumbnailPublicId);
+      } catch (cleanupError) {
+        console.error("Failed to clean up course thumbnail:", cleanupError);
+      }
+    }
+
     console.error("Course creation error:", error);
 
     return res.status(500).json({
@@ -305,8 +400,8 @@ export const getCreatorCourses = async (req, res) => {
   try {
     const courses = await Course.find({ creator: req.userId })
       .select(
-        "title subtitle category level price thumbnail isPublished createdAt",
-      )
+  "title subtitle category level price thumbnail lectures isPublished createdAt",
+)
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -433,6 +528,127 @@ export const editCourse = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update course.",
+    });
+  }
+};
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required.",
+      });
+    }
+
+    // Fetch course and verify ownership.
+    const course = await Course.findById(courseId).select(
+      "creator thumbnail lectures",
+    );
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
+    }
+
+    if (course.creator.toString() !== req.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this course.",
+      });
+    }
+
+    // Get lecture videos before deleting the lecture documents.
+    const lectures = await Lecture.find({
+      course: courseId,
+    }).select("publicId");
+
+    const lectureVideoPublicIds = lectures
+      .map((lecture) => lecture.publicId)
+      .filter(Boolean);
+
+    // Get course thumbnail public ID before deleting the course.
+    const thumbnailPublicId = getCloudinaryPublicIdFromUrl(
+      course.thumbnail,
+    );
+
+    /*
+     * Remove database references.
+     *
+     * CoursePurchase is intentionally NOT deleted.
+     * It is useful for preserving historical sales/revenue records.
+     */
+    await Promise.all([
+      Lecture.deleteMany({
+        course: courseId,
+      }),
+
+      Review.deleteMany({
+        course: courseId,
+      }),
+
+      CourseProgress.deleteMany({
+        courseId,
+      }),
+
+      User.updateMany(
+        {
+          enrolledCourses: courseId,
+        },
+        {
+          $pull: {
+            enrolledCourses: courseId,
+          },
+        },
+      ),
+    ]);
+
+    // Finally remove the course itself.
+    await Course.findByIdAndDelete(courseId);
+
+    /*
+     * Clean up Cloudinary files after successful database deletion.
+     *
+     * Media cleanup failure should not make the API report that
+     * the course was not deleted because the database operation
+     * has already completed.
+     */
+    if (thumbnailPublicId) {
+      try {
+        await deleteMediaFromCloudinary(thumbnailPublicId);
+      } catch (cleanupError) {
+        console.error(
+          "Failed to delete course thumbnail from Cloudinary:",
+          cleanupError,
+        );
+      }
+    }
+
+    for (const publicId of lectureVideoPublicIds) {
+      try {
+        await deleteVideoFromCloudinary(publicId);
+      } catch (cleanupError) {
+        console.error(
+          `Failed to delete lecture video ${publicId} from Cloudinary:`,
+          cleanupError,
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Course deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Course deletion error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete course.",
     });
   }
 };
@@ -571,33 +787,6 @@ export const getCourseLectures = async (req, res) => {
   }
 };
 
-export const getLectureById = async (req, res) => {
-  try {
-    const { lectureId } = req.params;
-
-    const lecture = await Lecture.findById(lectureId);
-
-    if (!lecture) {
-      return res.status(404).json({
-        success: false,
-        message: "Lecture not found.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      lecture,
-    });
-  } catch (error) {
-    console.error("Failed to fetch lecture:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch lecture.",
-    });
-  }
-};
-
 export const editLecture = async (req, res) => {
   try {
     const { courseId, lectureId } = req.params;
@@ -632,6 +821,8 @@ export const editLecture = async (req, res) => {
       });
     }
 
+    const oldVideoPublicId = lecture.publicId || null;
+
     if (title?.trim()) {
       lecture.title = title.trim();
     }
@@ -662,6 +853,25 @@ export const editLecture = async (req, res) => {
     }
 
     await lecture.save();
+
+    // Remove the old Cloudinary video only after the new lecture
+    // information has been saved successfully.
+    const newVideoPublicId = lecture.publicId || null;
+
+    if (
+      oldVideoPublicId &&
+      newVideoPublicId &&
+      oldVideoPublicId !== newVideoPublicId
+    ) {
+      try {
+        await deleteVideoFromCloudinary(oldVideoPublicId);
+      } catch (cleanupError) {
+        console.error(
+          "Failed to remove old lecture video from Cloudinary:",
+          cleanupError,
+        );
+      }
+    }
 
     return res.status(200).json({
       success: true,

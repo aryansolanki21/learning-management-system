@@ -27,8 +27,8 @@ const Dashboard = () => {
   const { purchasedCourses } = data || [];
 
   const courseData = purchasedCourses.map((course) => ({
-    name: course.courseId.courseTitle,
-    price: course.courseId.coursePrice,
+    name: course.courseId.title,
+    price: course.courseId.price,
   }));
 
   const totalRevenue = purchasedCourses.reduce(

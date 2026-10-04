@@ -3,30 +3,29 @@ import express from "express";
 import authenticateUser from "../middlewares/authenticate-user.js";
 import {
   createCourse,
-  createLecture,
-  editCourse,
-  editLecture,
-  getCourseById,
-  getCourseLectures,
-  getCreatorCourses,
-  getLectureById,
   getPublishedCourses,
-  removeLecture,
+  getCourseById,
   searchCourses,
+  getCreatorCourses,
+  editCourse,
+  deleteCourse,
   togglePublishCourse,
+  createLecture,
+  getCourseLectures,
+  editLecture,
+  removeLecture,
 } from "../controllers/courseController.js";
 import upload from "../utils/multer.js";
 
-import {
-  getRecommendedCourses,
-} from "../controllers/recommendationController.js";
+import { getRecommendedCourses } from "../controllers/recommendationController.js";
 
 const router = express.Router();
 
 router
   .route("/")
-  .post(authenticateUser, createCourse)
+  .post(authenticateUser, upload.single("thumbnail"), createCourse)
   .get(authenticateUser, getCreatorCourses);
+
 router.route("/search").get(searchCourses);
 
 router.route("/published-courses").get(getPublishedCourses);
@@ -36,7 +35,8 @@ router.route("/recommended").get(authenticateUser, getRecommendedCourses);
 router
   .route("/:courseId")
   .get(getCourseById)
-  .patch(authenticateUser, upload.single("thumbnail"), editCourse);
+  .patch(authenticateUser, upload.single("thumbnail"), editCourse)
+  .delete(authenticateUser, deleteCourse);
 
 router.route("/:courseId/publish").patch(authenticateUser, togglePublishCourse);
 
@@ -49,8 +49,6 @@ router
   .route("/:courseId/lecture/:lectureId")
   .patch(authenticateUser, editLecture)
   .delete(authenticateUser, removeLecture);
-
-router.route("/lecture/:lectureId").get(authenticateUser, getLectureById);
 
 
 export default router;

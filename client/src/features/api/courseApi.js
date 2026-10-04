@@ -4,9 +4,11 @@ const COURSE_API = "http://localhost:8080/api/v1/course";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
+
   tagTypes: [
     "Refetch_Creator_Course",
     "Refetch_Lecture",
+    "CourseDetails",
     "PublishedCourses",
     "RecommendedCourses",
   ],
@@ -18,10 +20,10 @@ export const courseApi = createApi({
 
   endpoints: (builder) => ({
     createCourse: builder.mutation({
-      query: ({ title, category }) => ({
+      query: (formData) => ({
         url: "",
         method: "POST",
-        body: { title, category },
+        body: formData,
       }),
 
       invalidatesTags: ["Refetch_Creator_Course"],
@@ -35,6 +37,7 @@ export const courseApi = createApi({
           const categoriesString = categories
             .map((category) => encodeURIComponent(category))
             .join(",");
+
           queryString += `&categories=${categoriesString}`;
         }
 
@@ -81,6 +84,10 @@ export const courseApi = createApi({
         url: `/${courseId}`,
         method: "GET",
       }),
+
+      providesTags: (result, error, courseId) => [
+        { type: "CourseDetails", id: courseId },
+      ],
     }),
 
     editCourse: builder.mutation({
@@ -89,7 +96,27 @@ export const courseApi = createApi({
         method: "PATCH",
         body: formData,
       }),
-      invalidatesTags: ["Refetch_Creator_Course"],
+
+      invalidatesTags: (result, error, { courseId }) => [
+        "Refetch_Creator_Course",
+        { type: "CourseDetails", id: courseId },
+        "PublishedCourses",
+        "RecommendedCourses",
+      ],
+    }),
+
+    deleteCourse: builder.mutation({
+      query: (courseId) => ({
+        url: `/${courseId}`,
+        method: "DELETE",
+      }),
+
+      invalidatesTags: (result, error, courseId) => [
+        "Refetch_Creator_Course",
+        "PublishedCourses",
+        "RecommendedCourses",
+        { type: "CourseDetails", id: courseId },
+      ],
     }),
 
     createLecture: builder.mutation({
@@ -98,6 +125,11 @@ export const courseApi = createApi({
         method: "POST",
         body: { title },
       }),
+
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: "Refetch_Lecture", id: courseId },
+        { type: "CourseDetails", id: courseId },
+      ],
     }),
 
     getCourseLectures: builder.query({
@@ -105,7 +137,10 @@ export const courseApi = createApi({
         url: `/${courseId}/lecture`,
         method: "GET",
       }),
-      providesTags: ["Refetch_Lecture"],
+
+      providesTags: (result, error, courseId) => [
+        { type: "Refetch_Lecture", id: courseId },
+      ],
     }),
 
     editLecture: builder.mutation({
@@ -118,7 +153,11 @@ export const courseApi = createApi({
           isPreviewFree,
         },
       }),
-      invalidatesTags: ["Refetch_Lecture"],
+
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: "Refetch_Lecture", id: courseId },
+        { type: "CourseDetails", id: courseId },
+      ],
     }),
 
     removeLecture: builder.mutation({
@@ -126,14 +165,11 @@ export const courseApi = createApi({
         url: `/${courseId}/lecture/${lectureId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Refetch_Lecture"],
-    }),
 
-    getLectureById: builder.query({
-      query: (lectureId) => ({
-        url: `/lecture/${lectureId}`,
-        method: "GET",
-      }),
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: "Refetch_Lecture", id: courseId },
+        { type: "CourseDetails", id: courseId },
+      ],
     }),
 
     publishCourse: builder.mutation({
@@ -141,6 +177,13 @@ export const courseApi = createApi({
         url: `/${courseId}/publish?publish=${query}`,
         method: "PATCH",
       }),
+
+      invalidatesTags: (result, error, { courseId }) => [
+        "Refetch_Creator_Course",
+        { type: "CourseDetails", id: courseId },
+        "PublishedCourses",
+        "RecommendedCourses",
+      ],
     }),
   }),
 });
@@ -153,10 +196,10 @@ export const {
   useGetCreatorCoursesQuery,
   useGetCourseByIdQuery,
   useEditCourseMutation,
+  useDeleteCourseMutation,
   useCreateLectureMutation,
   useGetCourseLecturesQuery,
   useEditLectureMutation,
   useRemoveLectureMutation,
-  useGetLectureByIdQuery,
   usePublishCourseMutation,
 } = courseApi;
