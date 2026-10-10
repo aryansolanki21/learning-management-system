@@ -42,7 +42,7 @@ import { toast } from "@/components/ui/toast.jsx";
 
 import { formatDuration } from "@/utils/formatDuration.js";
 
-const MEDIA_API = "http://localhost:8080/api/v1/media";
+const MEDIA_API = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/v1/media`;
 
 const emptyLectureForm = {
   title: "",
