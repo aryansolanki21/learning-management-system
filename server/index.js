@@ -12,6 +12,7 @@ import mediaRoute from "./routes/mediaRoutes.js";
 import purchaseRoute from "./routes/purchaseRoute.js";
 import courseProgressRoute from "./routes/courseProgressRoutes.js";
 import reviewRoute from "./routes/reviewRoutes.js";
+import analyticsRoute from "./routes/analyticsRoute.js";
 
 // Establish database connection
 connectDB();
@@ -38,6 +39,7 @@ app.use("/api/v1/media", mediaRoute);
 app.use("/api/v1/purchase", purchaseRoute);
 app.use("/api/v1/progress", courseProgressRoute);
 app.use("/api/v1/review", reviewRoute);
+app.use("/api/v1/analytics", analyticsRoute);
 
 app.listen(PORT, () => {
   console.log(`Server listen at port ${PORT}`);

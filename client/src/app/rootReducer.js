@@ -6,6 +6,7 @@ import { courseApi } from "@/features/api/courseApi.js";
 import { purchaseApi } from "@/features/api/purchaseApi.js";
 import { courseProgressApi } from "@/features/api/courseProgressApi.js";
 import { reviewApi } from "@/features/api/reviewApi.js";
+import { analyticsApi } from "@/features/api/analyticsApi.js";
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   [purchaseApi.reducerPath]: purchaseApi.reducer,
   [courseProgressApi.reducerPath]: courseProgressApi.reducer,
   [reviewApi.reducerPath]: reviewApi.reducer,
+  [analyticsApi.reducerPath]: analyticsApi.reducer,
 
   auth: authReducer,
 });

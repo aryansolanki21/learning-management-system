@@ -19,13 +19,13 @@ const CourseCarousel = ({ courses }) => {
         align: "start",
         dragFree: true,
       }}
-      className="w-full"
+      className="w-full min-w-0"
     >
       <CarouselContent className="-ml-4">
         {courses.map((course) => (
           <CarouselItem
             key={course._id}
-            className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+            className="min-w-0 basis-full pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
           >
             <div className="h-full p-1">
               <Course course={course} />
@@ -34,8 +34,16 @@ const CourseCarousel = ({ courses }) => {
         ))}
       </CarouselContent>
 
-      <CarouselPrevious className="left-2 xl:-left-12" />
-      <CarouselNext className="right-2 xl:-right-12" />
+      {/* Position navigation arrows over the thumbnail, not the title */}
+      <CarouselPrevious
+        aria-label="Previous courses"
+        className="left-2 top-17 bottom-auto z-20 my-0 disabled:hidden"
+      />
+
+      <CarouselNext
+        aria-label="Next courses"
+        className="right-2 top-17 bottom-auto z-20 my-0 disabled:hidden"
+      />
     </Carousel>
   );
 };

@@ -3,9 +3,10 @@ import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen w-full min-w-0 flex-col">
       <Navbar />
-      <div className="flex-1 mt-16">
+
+      <div className="mt-16 min-w-0 w-full flex-1">
         <Outlet />
       </div>
     </div>
