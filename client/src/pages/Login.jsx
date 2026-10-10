@@ -8,8 +8,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
