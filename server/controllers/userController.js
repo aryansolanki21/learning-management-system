@@ -146,6 +146,13 @@ export const login = async (req, res) => {
 
     await user.save();
 
+    // Exclude authentication secrets from the user response.
+    const safeUser = user.toObject();
+
+    delete safeUser.password;
+    delete safeUser.refreshTokenHash;
+    delete safeUser.refreshTokenExpiresAt;
+
     return res
       .status(200)
       .cookie("accessToken", accessToken, accessTokenCookieOptions)
@@ -311,7 +318,7 @@ export const getUserProfile = async (req, res) => {
     const userId = req.userId;
 
     const user = await User.findById(userId)
-      .select("-password")
+      .select("-password -refreshTokenHash -refreshTokenExpiresAt")
       .populate("enrolledCourses");
 
     if (!user) {
@@ -384,7 +391,7 @@ export const updateProfile = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
       returnDocument: "after",
-    }).select("-password");
+    }).select("-password -refreshTokenHash -refreshTokenExpiresAt");
 
     return res.status(200).json({
       success: true,
