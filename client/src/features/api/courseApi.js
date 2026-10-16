@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQueryWithReauth } from "@/features/api/baseQueryWithReauth.js";
 
 const COURSE_API = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/v1/course`;
 
@@ -13,10 +14,7 @@ export const courseApi = createApi({
     "RecommendedCourses",
   ],
 
-  baseQuery: fetchBaseQuery({
-    baseUrl: COURSE_API,
-    credentials: "include",
-  }),
+  baseQuery: createBaseQueryWithReauth(COURSE_API),
 
   endpoints: (builder) => ({
     createCourse: builder.mutation({

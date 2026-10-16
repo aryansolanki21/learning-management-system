@@ -197,11 +197,13 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
       });
     }
 
-    const isPurchased = await CoursePurchase.findOne({
-      userId,
-      courseId,
-      status: "completed",
-    });
+    const isPurchased = userId
+      ? await CoursePurchase.findOne({
+          userId,
+          courseId,
+          status: "completed",
+        })
+      : null;
 
     return res.status(200).json({
       success: true,

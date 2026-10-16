@@ -9,6 +9,7 @@ import {
   deleteVideoFromCloudinary,
   uploadMedia,
 } from "../utils/cloudinary.js";
+import sanitizeRichText from "../utils/sanitize-rich-text.js";
 
 const getCloudinaryPublicIdFromUrl = (url) => {
   if (!url) {
@@ -42,7 +43,9 @@ export const createCourse = async (req, res) => {
 
     const trimmedTitle = title?.trim();
     const trimmedSubtitle = subtitle?.trim() || "";
-    const trimmedDescription = description?.trim() || "";
+    const trimmedDescription = sanitizeRichText(
+      typeof description === "string" ? description.trim() : "",
+    );
     const trimmedCategory = category?.trim();
 
     // Required fields
@@ -400,8 +403,8 @@ export const getCreatorCourses = async (req, res) => {
   try {
     const courses = await Course.find({ creator: req.userId })
       .select(
-  "title subtitle category level price thumbnail lectures isPublished createdAt",
-)
+        "title subtitle category level price thumbnail lectures isPublished createdAt",
+      )
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -454,7 +457,9 @@ export const editCourse = async (req, res) => {
     }
 
     if (description !== undefined) {
-      updateData.description = description.trim();
+      updateData.description = sanitizeRichText(
+        typeof description === "string" ? description.trim() : "",
+      );
     }
 
     if (category?.trim()) {
@@ -572,9 +577,7 @@ export const deleteCourse = async (req, res) => {
       .filter(Boolean);
 
     // Get course thumbnail public ID before deleting the course.
-    const thumbnailPublicId = getCloudinaryPublicIdFromUrl(
-      course.thumbnail,
-    );
+    const thumbnailPublicId = getCloudinaryPublicIdFromUrl(course.thumbnail);
 
     /*
      * Remove database references.

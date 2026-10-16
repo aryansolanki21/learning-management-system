@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, CheckCircle2, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+
+  const { user } = useSelector((store) => store.auth);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -48,11 +51,22 @@ const HeroSection = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate("/my-learning")}
+                onClick={() =>
+                  navigate(user ? "/my-learning" : "/login?tab=signup")
+                }
                 className="h-12 px-6 rounded-lg"
               >
-                <BookOpen className="mr-2" size={18} />
-                My Learning
+                {user ? (
+                  <>
+                    <BookOpen className="mr-2" size={18} />
+                    My Learning
+                  </>
+                ) : (
+                  <>
+                    Get Started Free
+                    <ArrowRight className="ml-2" size={18} />
+                  </>
+                )}
               </Button>
             </div>
 

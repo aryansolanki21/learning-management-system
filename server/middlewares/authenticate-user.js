@@ -32,4 +32,28 @@ const authenticateUser = (req, res, next) => {
   }
 };
 
+// Optional authentication for public routes.
+// If a valid access token exists, attach the user ID.
+// Otherwise, continue as a guest.
+export const optionalAuthenticateUser = (req, res, next) => {
+  const accessToken = req.cookies?.accessToken;
+
+  if (!accessToken) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+
+    if (decoded?.userId) {
+      req.userId = decoded.userId;
+    }
+  } catch (error) {
+    // This route is public, so an invalid or expired token
+    // should not prevent visitors from viewing course details.
+  }
+
+  return next();
+};
+
 export default authenticateUser;

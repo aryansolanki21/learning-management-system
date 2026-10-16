@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQueryWithReauth } from "@/features/api/baseQueryWithReauth.js";
 import { authApi } from "@/features/api/authApi.js";
 
 const COURSE_PROGRESS_API = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/v1/progress`;
@@ -8,10 +9,7 @@ export const courseProgressApi = createApi({
 
   tagTypes: ["CourseProgress"],
 
-  baseQuery: fetchBaseQuery({
-    baseUrl: COURSE_PROGRESS_API,
-    credentials: "include",
-  }),
+  baseQuery: createBaseQueryWithReauth(COURSE_PROGRESS_API),
 
   endpoints: (builder) => ({
     getCourseProgress: builder.query({

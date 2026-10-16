@@ -18,6 +18,8 @@ import analyticsRoute from "./routes/analyticsRoute.js";
 connectDB();
 
 const app = express();
+app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 3000;
 
 // Register global middleware

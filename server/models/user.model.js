@@ -16,9 +16,52 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    emailVerified: {
+      type: Boolean,
+      default: true,
+    },
+
+    emailVerificationOtpHash: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    emailVerificationOtpExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
+    emailVerificationAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+
+    emailVerificationLastSentAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.authProvider !== "google";
+      },
     },
 
     role: {

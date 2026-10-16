@@ -1,6 +1,8 @@
 import express from "express";
 
-import authenticateUser from "../middlewares/authenticate-user.js";
+import authenticateUser, {
+  optionalAuthenticateUser,
+} from "../middlewares/authenticate-user.js";
 
 import {
   createCheckoutOrder,
@@ -19,7 +21,7 @@ router.route("/checkout/verify").post(authenticateUser, verifyPayment);
 
 router
   .route("/course/:courseId/detail-with-status")
-  .get(authenticateUser, getCourseDetailWithPurchaseStatus);
+  .get(optionalAuthenticateUser, getCourseDetailWithPurchaseStatus);
 
 router.route("/").get(authenticateUser, getAllPurchasedCourses);
 

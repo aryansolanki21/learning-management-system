@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQueryWithReauth } from "@/features/api/baseQueryWithReauth.js";
 import { userLoggedIn, userLoggedOut } from "../authSlice.js";
 
 const USER_API = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/v1/user/`;
@@ -7,10 +8,7 @@ const USER_API = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
 export const authApi = createApi({
   reducerPath: "authApi",
 
-  baseQuery: fetchBaseQuery({
-    baseUrl: USER_API,
-    credentials: "include",
-  }),
+  baseQuery: createBaseQueryWithReauth(USER_API),
 
   tagTypes: ["User", "MyLearning"],
 
@@ -23,6 +21,33 @@ export const authApi = createApi({
       }),
 
       invalidatesTags: ["User"],
+    }),
+
+    verifyEmailOtp: builder.mutation({
+      query: ({ email, otp }) => ({
+        url: "verify-email",
+        method: "POST",
+        body: { email, otp },
+      }),
+
+      invalidatesTags: ["User", "MyLearning"],
+
+      async onQueryStarted(_, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(userLoggedIn({ user: data.user }));
+        } catch (error) {
+          console.error("Email verification failed:", error);
+        }
+      },
+    }),
+
+    resendVerificationOtp: builder.mutation({
+      query: ({ email }) => ({
+        url: "resend-verification",
+        method: "POST",
+        body: { email },
+      }),
     }),
 
     loginUser: builder.mutation({
@@ -40,6 +65,25 @@ export const authApi = createApi({
           dispatch(userLoggedIn({ user: data.user }));
         } catch (error) {
           console.error("Failed to login:", error);
+        }
+      },
+    }),
+
+    googleLogin: builder.mutation({
+      query: ({ credential }) => ({
+        url: "google",
+        method: "POST",
+        body: { credential },
+      }),
+
+      invalidatesTags: ["User", "MyLearning"],
+
+      async onQueryStarted(_, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(userLoggedIn({ user: data.user }));
+        } catch (error) {
+          console.error("Failed to sign in with Google:", error);
         }
       },
     }),
@@ -105,7 +149,10 @@ export const authApi = createApi({
 
 export const {
   useRegisterUserMutation,
+  useVerifyEmailOtpMutation,
+  useResendVerificationOtpMutation,
   useLoginUserMutation,
+  useGoogleLoginMutation,
   useLogoutUserMutation,
   useLoadUserQuery,
   useUpdateUserMutation,

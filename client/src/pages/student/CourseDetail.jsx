@@ -17,6 +17,7 @@ import ReactPlayer from "react-player";
 import { ArrowLeft, BadgeInfo, BookOpen, Lock, PlayCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import CourseReviews from "./CourseReviews.jsx";
+import DOMPurify from "dompurify";
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -77,12 +78,12 @@ const CourseDetail = () => {
           </h1>
 
           {course.subtitle && (
-            <p className="break-words text-sm leading-6 text-gray-200 sm:text-base lg:text-lg">
+            <p className="wrap-break-word text-sm leading-6 text-gray-200 sm:text-base lg:text-lg">
               {course.subtitle}
             </p>
           )}
 
-          <p className="break-words text-sm sm:text-base">
+          <p className="wrap-break-word text-sm sm:text-base">
             Created by{" "}
             <span className="font-medium italic text-[#C0C4FC] underline">
               {course.creator?.name || "Instructor"}
@@ -93,7 +94,9 @@ const CourseDetail = () => {
             <div className="flex min-w-0 items-start gap-2 text-sm text-gray-200">
               <BadgeInfo className="mt-0.5 h-4 w-4 shrink-0" />
 
-              <p className="min-w-0 break-words">Last updated {updatedDate}</p>
+              <p className="min-w-0 wrap-break-word">
+                Last updated {updatedDate}
+              </p>
             </div>
           )}
 
@@ -111,10 +114,11 @@ const CourseDetail = () => {
             <h2 className="text-xl font-bold sm:text-2xl">Description</h2>
 
             <div
-              className="min-w-0 break-words text-sm leading-6 [overflow-wrap:anywhere] sm:text-base"
+              className="min-w-0 wrap-break-word text-sm leading-6 sm:text-base"
               dangerouslySetInnerHTML={{
-                __html:
+                __html: DOMPurify.sanitize(
                   course.description || "No course description available.",
+                ),
               }}
             />
           </div>

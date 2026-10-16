@@ -55,6 +55,7 @@ const Navbar = () => {
     const query = params.get("query") || "";
 
     if (location.pathname === "/course/search") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery(query);
     }
   }, [location.pathname, location.search]);
@@ -104,14 +105,14 @@ const Navbar = () => {
         <Link
           to="/"
           className="flex items-center gap-2 shrink-0"
-          aria-label="E-Learning home"
+          aria-label="SkillNest home"
         >
           {" "}
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white">
             {" "}
             <School size={22} />{" "}
           </div>
-          <span className="font-bold text-xl tracking-tight">E-Learning</span>
+          <span className="font-bold text-xl tracking-tight">SkillNest</span>
         </Link>
         {/* Explore */}
         <DropdownMenu>
@@ -283,12 +284,15 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => navigate("/login")}>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/login?tab=login")}
+              >
                 Log in
               </Button>
 
               <Button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/login?tab=signup")}
                 className="rounded-full px-5"
               >
                 Sign up
@@ -302,13 +306,13 @@ const Navbar = () => {
         <Link
           to="/"
           className="flex items-center gap-2"
-          aria-label="E-Learning home"
+          aria-label="SkillNest home"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white">
             <School size={19} />
           </div>
 
-          <span className="font-bold text-lg">E-Learning</span>
+          <span className="font-bold text-lg">SkillNest</span>
         </Link>
 
         <MobileNavbar
@@ -357,7 +361,7 @@ const MobileNavbar = ({
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white">
                 <School size={18} />
               </div>
-              E-Learning
+              SkillNest
             </Link>
           </SheetTitle>
         </SheetHeader>
@@ -449,11 +453,16 @@ const MobileNavbar = ({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => navigate("/login")}>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/login?tab=login")}
+              >
                 Log in
               </Button>
 
-              <Button onClick={() => navigate("/login")}>Sign up</Button>
+              <Button onClick={() => navigate("/login?tab=signup")}>
+                Sign up
+              </Button>
             </>
           )}
         </div>

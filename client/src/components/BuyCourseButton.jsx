@@ -5,8 +5,13 @@ import {
 import { Button } from "./ui/button.jsx";
 import { Loader2 } from "lucide-react";
 import { toast } from "./ui/toast.jsx";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const BuyCourseButton = ({ courseId }) => {
+  const { user } = useSelector((store) => store.auth);
+  const navigate = useNavigate();
+
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] =
     useCreateRazorpayOrderMutation();
 
@@ -14,20 +19,28 @@ const BuyCourseButton = ({ courseId }) => {
     useVerifyRazorpayPaymentMutation();
 
   const purchaseCourseHandler = async () => {
+    if (!user) {
+      const coursePath = `/course-detail/${courseId}`;
+
+      toast.add({
+        title: "Login required",
+        description: "Please log in or sign up to purchase this course.",
+      });
+
+      navigate(`/login?tab=login&redirect=${encodeURIComponent(coursePath)}`);
+
+      return;
+    }
+
     try {
       const response = await createRazorpayOrder(courseId).unwrap();
 
       const options = {
         key: response.key,
-
         amount: response.order.amount,
-
         currency: response.order.currency,
-
-        name: "Learning Management System",
-
+        name: "SkillNest",
         description: "Course Purchase",
-
         order_id: response.order.id,
 
         handler: async function (paymentResponse) {
@@ -52,7 +65,7 @@ const BuyCourseButton = ({ courseId }) => {
         },
 
         theme: {
-          color: "#3399cc",
+          color: "#2563eb",
         },
       };
 
@@ -70,7 +83,7 @@ const BuyCourseButton = ({ courseId }) => {
 
       razorpay.open();
     } catch (error) {
-      console.error(error);
+      console.error("Failed to create payment order:", error);
 
       toast.add({
         title: "Error",
@@ -79,13 +92,15 @@ const BuyCourseButton = ({ courseId }) => {
     }
   };
 
+  const isProcessing = isCreatingOrder || isVerifyingPayment;
+
   return (
     <Button
-      disabled={isCreatingOrder || isVerifyingPayment}
+      disabled={isProcessing}
       onClick={purchaseCourseHandler}
       className="w-full"
     >
-      {isCreatingOrder || isVerifyingPayment ? (
+      {isProcessing ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Please wait
