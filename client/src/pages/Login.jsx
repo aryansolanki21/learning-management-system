@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardTitle,
-  CardHeader,
   CardContent,
   CardDescription,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -27,8 +28,103 @@ import {
 
 const getErrorMessage = (error, fallback) => error?.data?.message || fallback;
 
+/* ---------- Shared styles ---------- */
+
+// Horizontal padding for every card section, so all of them line up.
+const padX = "px-6 sm:px-8";
+
+const cardClass =
+  "w-full max-w-md gap-6 rounded-2xl border border-slate-200 bg-white py-6 shadow-sm ring-0 sm:py-8";
+
+const headerClass = `${padX} gap-1.5`;
+
+const titleClass =
+  "text-2xl font-bold leading-tight tracking-tight text-slate-900";
+
+const descriptionClass = "text-sm text-slate-600";
+
+const primaryButtonClass =
+  "h-11 w-full rounded-full bg-blue-600 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none";
+
+const inputClass =
+  "h-11 rounded-xl border-slate-200 bg-slate-50/70 transition-colors placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-blue-500/30";
+
+const tabTriggerClass =
+  "rounded-full text-sm text-slate-500 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm data-active:bg-white data-active:text-slate-900 data-active:shadow-sm";
+
+const footerClass = `justify-center border-t-0 bg-transparent p-0 pb-6 sm:pb-8 ${padX}`;
+
+const linkButtonClass =
+  "font-semibold text-blue-600 hover:text-blue-700 hover:underline";
+
+/* ---------- Small building blocks ---------- */
+
+const AuthPage = ({ children }) => (
+  <div className="flex min-h-[calc(100vh-5rem)] w-full justify-center bg-slate-100 px-4 pt-8 pb-12 sm:items-center sm:py-16">
+    {children}
+  </div>
+);
+
+const Divider = ({ label }) => (
+  <div className="flex items-center gap-3">
+    <Separator className="flex-1 bg-slate-200" />
+    <span className="text-xs text-slate-500">{label}</span>
+    <Separator className="flex-1 bg-slate-200" />
+  </div>
+);
+
+const PasswordField = ({
+  id,
+  name,
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+  minLength,
+}) => {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        name={name}
+        type={visible ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        minLength={minLength}
+        className={`${inputClass} pr-11`}
+        required
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((current) => !current)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+      >
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+};
+
+const SubmitContent = ({ loading, loadingText, children }) =>
+  loading ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      {loadingText}
+    </>
+  ) : (
+    children
+  );
+
+/* ---------- Page ---------- */
+
 const Login = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const requestedTab =
     searchParams.get("tab") === "signup" ? "signup" : "login";
@@ -38,11 +134,7 @@ const Login = () => {
     email: "",
     password: "",
   });
-
-  const [loginInput, setLoginInput] = useState({
-    email: "",
-    password: "",
-  });
+  const [loginInput, setLoginInput] = useState({ email: "", password: "" });
 
   const [showVerification, setShowVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
@@ -50,26 +142,19 @@ const Login = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [googleButtonWidth, setGoogleButtonWidth] = useState(() => {
-    if (typeof window === "undefined") return "400";
-
-    return window.matchMedia("(max-width: 480px)").matches ? "280" : "400";
+    if (typeof window === "undefined") return "384";
+    return window.matchMedia("(max-width: 480px)").matches ? "280" : "384";
   });
 
   const [registerUser, { isLoading: registerIsLoading }] =
     useRegisterUserMutation();
-
   const [verifyEmailOtp, { isLoading: verifyIsLoading }] =
     useVerifyEmailOtpMutation();
-
   const [resendVerificationOtp, { isLoading: resendIsLoading }] =
     useResendVerificationOtpMutation();
-
   const [loginUser, { isLoading: loginIsLoading }] = useLoginUserMutation();
-
   const [googleLogin, { isLoading: googleIsLoading }] =
     useGoogleLoginMutation();
-
-  const navigate = useNavigate();
 
   const getPostAuthPath = () => {
     const redirectTo = searchParams.get("redirect");
@@ -87,18 +172,28 @@ const Login = () => {
     return "/";
   };
 
+  const switchTab = (value) => {
+    if (value !== "login" && value !== "signup") return;
+
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set("tab", value);
+        return nextParams;
+      },
+      { replace: true },
+    );
+  };
+
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 480px)");
 
     const handleWidthChange = (event) => {
-      setGoogleButtonWidth(event.matches ? "280" : "400");
+      setGoogleButtonWidth(event.matches ? "280" : "384");
     };
 
     mediaQuery.addEventListener("change", handleWidthChange);
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleWidthChange);
-    };
+    return () => mediaQuery.removeEventListener("change", handleWidthChange);
   }, []);
 
   useEffect(() => {
@@ -113,27 +208,17 @@ const Login = () => {
 
   const changeInputHandler = (event, type) => {
     const { name, value } = event.target;
+    const update = (current) => ({ ...current, [name]: value });
 
-    if (type === "signup") {
-      setSignupInput((current) => ({
-        ...current,
-        [name]: value,
-      }));
-    } else {
-      setLoginInput((current) => ({
-        ...current,
-        [name]: value,
-      }));
-    }
+    if (type === "signup") setSignupInput(update);
+    else setLoginInput(update);
   };
 
   const handleRegistration = async () => {
     try {
       const result = await registerUser(signupInput).unwrap();
 
-      const email = signupInput.email.trim().toLowerCase();
-
-      setPendingEmail(email);
+      setPendingEmail(signupInput.email.trim().toLowerCase());
       setOtp("");
       setShowVerification(true);
       setResendCooldown(60);
@@ -143,15 +228,11 @@ const Login = () => {
         title: result.message || "Check your email for the verification code.",
       });
     } catch (error) {
-      const message = getErrorMessage(error, "Signup failed.");
-
       toast.add({
         type: "error",
-        title: message,
+        title: getErrorMessage(error, "Signup failed."),
       });
 
-      // A duplicate email may belong to an account awaiting verification.
-      // Offer the verification screen, but do not disclose account status.
       if (error?.status === 429) {
         setResendCooldown(
           Math.max(0, Number(error?.data?.retryAfterSeconds) || 60),
@@ -242,10 +323,7 @@ const Login = () => {
     }
 
     try {
-      const result = await verifyEmailOtp({
-        email: pendingEmail,
-        otp,
-      }).unwrap();
+      const result = await verifyEmailOtp({ email: pendingEmail, otp }).unwrap();
 
       toast.add({
         type: "success",
@@ -276,102 +354,129 @@ const Login = () => {
         title: result.message || "A new verification code has been sent.",
       });
     } catch (error) {
-      const retryAfter = Number(error?.data?.retryAfterSeconds);
-
       if (error?.status === 429) {
+        const retryAfter = Number(error?.data?.retryAfterSeconds);
         setResendCooldown(Math.max(1, retryAfter || resendCooldown || 60));
       }
 
       toast.add({
         type: "error",
-        title: getErrorMessage(
-          error,
-          "Unable to resend the verification code.",
-        ),
+        title: getErrorMessage(error, "Unable to resend the verification code."),
       });
     }
   };
 
+  const submitWith = (handler) => (event) => {
+    event.preventDefault();
+    handler();
+  };
+
+  const googleSection = (text) =>
+    googleIsLoading ? (
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 w-full rounded-full"
+        disabled
+      >
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Signing in with Google...
+      </Button>
+    ) : (
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          theme="outline"
+          size="large"
+          text={text}
+          shape="pill"
+          width={googleButtonWidth}
+        />
+      </div>
+    );
+
+  /* ----- Email verification ----- */
+
   if (showVerification) {
     return (
-      <div className="flex w-full justify-center px-4 pt-8 pb-12 sm:py-16">
-        <Card className="w-full max-w-md">
-          <CardHeader>
+      <AuthPage>
+        <Card className={cardClass}>
+          <CardHeader className={headerClass}>
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-              <MailCheck size={25} />
+              <MailCheck size={24} />
             </div>
 
-            <CardTitle>Verify your email</CardTitle>
+            <CardTitle className={titleClass}>Verify your email</CardTitle>
 
-            <CardDescription>
-              Enter the six-digit code sent to{" "}
-              <span className="font-medium text-foreground">
-                {pendingEmail}
-              </span>
-              . The code expires after 10 minutes.
+            <CardDescription className={`${descriptionClass} leading-relaxed`}>
+              Enter the six-digit code we sent to{" "}
+              <span className="font-medium text-slate-900">{pendingEmail}</span>
+              . The code expires in 10 minutes.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="verification-otp">Verification code</Label>
-
-              <Input
-                id="verification-otp"
-                name="otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="Enter 6-digit code"
-                maxLength={6}
-                value={otp}
-                onChange={(event) => {
-                  setOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
-                }}
-                disabled={verifyIsLoading}
-              />
-            </div>
-
-            <Button
-              className="w-full"
-              type="button"
-              disabled={verifyIsLoading || otp.length !== 6}
-              onClick={handleVerifyEmail}
+          <CardContent className={padX}>
+            <form
+              className="space-y-4"
+              onSubmit={submitWith(handleVerifyEmail)}
             >
-              {verifyIsLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Verify email"
-              )}
-            </Button>
-
-            <div className="text-center text-sm text-muted-foreground">
-              Didn't receive the code?
-              <div className="mt-2">
-                <Button
-                  type="button"
-                  variant="link"
-                  disabled={resendIsLoading || resendCooldown > 0}
-                  onClick={handleResendOtp}
-                >
-                  {resendIsLoading
-                    ? "Sending..."
-                    : resendCooldown > 0
-                      ? `Resend code in ${resendCooldown}s`
-                      : "Resend verification code"}
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="verification-otp">Verification code</Label>
+                <Input
+                  id="verification-otp"
+                  name="otp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(event) =>
+                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  disabled={verifyIsLoading}
+                  className={`${inputClass} h-12 text-center text-xl font-semibold tracking-[0.5em]`}
+                />
               </div>
+
+              <Button
+                type="submit"
+                className={primaryButtonClass}
+                disabled={verifyIsLoading || otp.length !== 6}
+              >
+                <SubmitContent
+                  loading={verifyIsLoading}
+                  loadingText="Verifying..."
+                >
+                  Verify email
+                </SubmitContent>
+              </Button>
+            </form>
+
+            <div className="mt-5 text-center text-sm text-slate-600">
+              Didn't receive the code?
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto px-1.5 py-0 font-semibold text-blue-600"
+                disabled={resendIsLoading || resendCooldown > 0}
+                onClick={handleResendOtp}
+              >
+                {resendIsLoading
+                  ? "Sending..."
+                  : resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : "Resend code"}
+              </Button>
             </div>
           </CardContent>
 
-          <CardFooter>
+          <CardFooter className={`${footerClass} -mt-2`}>
             <Button
-              className="w-full"
-              variant="outline"
               type="button"
+              variant="ghost"
+              className="w-full rounded-full text-slate-600"
               disabled={verifyIsLoading || resendIsLoading}
               onClick={() => {
                 setShowVerification(false);
@@ -383,253 +488,209 @@ const Login = () => {
             </Button>
           </CardFooter>
         </Card>
-      </div>
+      </AuthPage>
     );
   }
 
+  /* ----- Login / Signup ----- */
+
   return (
-    <div className="flex w-full justify-center px-4 pt-8 pb-12 sm:py-16">
+    <AuthPage>
       <Tabs
         value={requestedTab}
-        onValueChange={(value) => {
-          if (value !== "login" && value !== "signup") return;
-
-          setSearchParams(
-            (currentParams) => {
-              const nextParams = new URLSearchParams(currentParams);
-              nextParams.set("tab", value);
-              return nextParams;
-            },
-            { replace: true },
-          );
-        }}
+        onValueChange={switchTab}
         className="w-full max-w-md"
       >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="signup">Signup</TabsTrigger>
-          <TabsTrigger value="login">Login</TabsTrigger>
-        </TabsList>
+        <Card className={`${cardClass} max-w-none`}>
+          <div className={padX}>
+            <TabsList className="grid h-11 w-full grid-cols-2 rounded-full bg-slate-100 p-1">
+              <TabsTrigger value="login" className={tabTriggerClass}>
+                Log in
+              </TabsTrigger>
+              <TabsTrigger value="signup" className={tabTriggerClass}>
+                Sign up
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <TabsContent value="signup">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create your account</CardTitle>
-              <CardDescription>
-                Enter your details. We'll email you a code to verify your
-                address before completing registration.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Name</Label>
-                <Input
-                  id="signup-name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  value={signupInput.name}
-                  onChange={(event) => changeInputHandler(event, "signup")}
-                  placeholder="Aryan Solanki"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={signupInput.email}
-                  onChange={(event) => changeInputHandler(event, "signup")}
-                  placeholder="aryan123@gmail.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={signupInput.password}
-                  onChange={(event) => changeInputHandler(event, "signup")}
-                  placeholder="Create a password"
-                  minLength={6}
-                  required
-                />
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Use at least 6 characters, including an uppercase letter, a
-                  lowercase letter, and a number.
-                </p>
-              </div>
-
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or sign up with
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex justify-center">
-                {googleIsLoading ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    disabled
-                  >
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in with Google...
-                  </Button>
-                ) : (
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    theme="outline"
-                    size="large"
-                    text="signup_with"
-                    shape="rectangular"
-                    width={googleButtonWidth}
-                  />
-                )}
-              </div>
-            </CardContent>
-
-            <CardFooter>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={
-                  registerIsLoading ||
-                  !signupInput.name.trim() ||
-                  !signupInput.email.trim() ||
-                  !signupInput.password
-                }
-                onClick={handleRegistration}
-              >
-                {registerIsLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending verification code...
-                  </>
-                ) : (
-                  "Continue with email"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome back</CardTitle>
-              <CardDescription>
+          {/* Login */}
+          <TabsContent value="login" className="mt-2 flex flex-col gap-6">
+            <CardHeader className={headerClass}>
+              <CardTitle className={titleClass}>Welcome back</CardTitle>
+              <CardDescription className={descriptionClass}>
                 Log in to continue learning on SkillNest.
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
-                <Input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={loginInput.email}
-                  onChange={(event) => changeInputHandler(event, "login")}
-                  placeholder="aryan123@gmail.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
-                <Input
-                  id="login-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={loginInput.password}
-                  onChange={(event) => changeInputHandler(event, "login")}
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex justify-center">
-                {googleIsLoading ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    disabled
-                  >
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in with Google...
-                  </Button>
-                ) : (
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    theme="outline"
-                    size="large"
-                    text="continue_with"
-                    shape="rectangular"
-                    width={googleButtonWidth}
+            <CardContent className={`${padX} flex flex-col gap-6`}>
+              <form className="space-y-4" onSubmit={submitWith(handleLogin)}>
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={loginInput.email}
+                    onChange={(event) => changeInputHandler(event, "login")}
+                    placeholder="you@example.com"
+                    className={inputClass}
+                    required
                   />
-                )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <PasswordField
+                    id="login-password"
+                    name="password"
+                    autoComplete="current-password"
+                    value={loginInput.password}
+                    onChange={(event) => changeInputHandler(event, "login")}
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className={primaryButtonClass}
+                  disabled={
+                    loginIsLoading ||
+                    !loginInput.email.trim() ||
+                    !loginInput.password
+                  }
+                >
+                  <SubmitContent
+                    loading={loginIsLoading}
+                    loadingText="Logging in..."
+                  >
+                    Log in
+                  </SubmitContent>
+                </Button>
+              </form>
+
+              <div className="space-y-5">
+                <Divider label="or continue with" />
+                {googleSection("continue_with")}
               </div>
             </CardContent>
 
-            <CardFooter>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={
-                  loginIsLoading ||
-                  !loginInput.email.trim() ||
-                  !loginInput.password
-                }
-                onClick={handleLogin}
-              >
-                {loginIsLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </Button>
+            <CardFooter className={footerClass}>
+              <p className="text-center text-sm text-slate-600">
+                New to SkillNest?{" "}
+                <button
+                  type="button"
+                  className={linkButtonClass}
+                  onClick={() => switchTab("signup")}
+                >
+                  Create an account
+                </button>
+              </p>
             </CardFooter>
-          </Card>
-        </TabsContent>
+          </TabsContent>
+
+          {/* Signup */}
+          <TabsContent value="signup" className="mt-2 flex flex-col gap-6">
+            <CardHeader className={headerClass}>
+              <CardTitle className={titleClass}>Create your account</CardTitle>
+              <CardDescription className={descriptionClass}>
+                We'll email you a code to verify your address.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className={`${padX} flex flex-col gap-6`}>
+              <form
+                className="space-y-4"
+                onSubmit={submitWith(handleRegistration)}
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Name</Label>
+                  <Input
+                    id="signup-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    value={signupInput.name}
+                    onChange={(event) => changeInputHandler(event, "signup")}
+                    placeholder="Your full name"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={signupInput.email}
+                    onChange={(event) => changeInputHandler(event, "signup")}
+                    placeholder="you@example.com"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <PasswordField
+                    id="signup-password"
+                    name="password"
+                    autoComplete="new-password"
+                    value={signupInput.password}
+                    onChange={(event) => changeInputHandler(event, "signup")}
+                    placeholder="Create a password"
+                    minLength={6}
+                  />
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    At least 6 characters, with an uppercase letter, a
+                    lowercase letter, and a number.
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  className={primaryButtonClass}
+                  disabled={
+                    registerIsLoading ||
+                    !signupInput.name.trim() ||
+                    !signupInput.email.trim() ||
+                    !signupInput.password
+                  }
+                >
+                  <SubmitContent
+                    loading={registerIsLoading}
+                    loadingText="Sending code..."
+                  >
+                    Continue with email
+                  </SubmitContent>
+                </Button>
+              </form>
+
+              <div className="space-y-5">
+                <Divider label="or sign up with" />
+                {googleSection("signup_with")}
+              </div>
+            </CardContent>
+
+            <CardFooter className={footerClass}>
+              <p className="text-center text-sm text-slate-600">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className={linkButtonClass}
+                  onClick={() => switchTab("login")}
+                >
+                  Log in
+                </button>
+              </p>
+            </CardFooter>
+          </TabsContent>
+        </Card>
       </Tabs>
-    </div>
+    </AuthPage>
   );
 };
 
